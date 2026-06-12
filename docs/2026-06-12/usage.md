@@ -12,6 +12,8 @@ start-guitar-training.cmd
 
 如果存在 `dist/index.html`，它会直接打开本地网页应用。
 
+实现上不会直接打开 `file://dist/index.html`，而是自动启动一个本机临时网页服务并打开浏览器，避免浏览器安全策略导致空白页。使用时保持启动窗口打开；关闭该窗口即可停止程序。
+
 ### 开发者
 
 Linux/macOS/WSL 可运行：

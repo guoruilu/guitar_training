@@ -43,3 +43,4 @@
 - 启动入口：新增 Windows 双击入口 `start-guitar-training.cmd`、跨平台 shell 入口 `start-guitar-training.sh` 和 `scripts/launch-dev.mjs`，用于安装依赖、启动固定端口 dev server 并打开浏览器。
 - 普通用户启动调整：`start-guitar-training.cmd` 优先打开预构建 `dist/index.html`，不要求普通用户具备 WSL/npm；Vite 改为相对 base，便于发布包本地双击运行。
 - 发布包构建：新增 GitHub Actions workflow，自动运行测试/构建并上传 `guitar-training-windows` 静态包，普通 Windows 用户下载后双击 `start-guitar-training.cmd` 即可运行。
+- Windows 空白页修复：不再直接用 `file://` 打开 `dist/index.html`；Windows 启动器改为用 PowerShell 启动本机静态服务并打开 `http://127.0.0.1:<port>/`，发布包同步包含 `scripts/start-windows.ps1`。

@@ -34,6 +34,8 @@ jobs:
           mkdir -p guitar-training-windows
           cp -r dist guitar-training-windows/
           cp start-guitar-training.cmd guitar-training-windows/
+          mkdir -p guitar-training-windows/scripts
+          cp scripts/start-windows.ps1 guitar-training-windows/scripts/
           cp README.md guitar-training-windows/
 
       - name: Upload static package
