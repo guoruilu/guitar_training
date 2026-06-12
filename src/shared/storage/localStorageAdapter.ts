@@ -1,4 +1,5 @@
 import type { StorageAdapter, TrainingArea, TrainingStats, UserProgress, UserSettings } from './types';
+import { INTERVALS } from '../music/theory';
 
 export const STORAGE_KEY = 'guitar-learning-assistant:progress:v1';
 export const EXPORT_FILE_NAME = 'guitar-training-progress.json';
@@ -15,6 +16,9 @@ export const DEFAULT_SETTINGS: UserSettings = {
   showDegrees: true,
   showNoteNames: true,
   preferredSynth: 'clean',
+  theme: 'dark',
+  enabledIntervalIds: INTERVALS.map((interval) => interval.id),
+  intervalDirection: 'both',
 };
 
 export function defaultProgress(): UserProgress {
@@ -36,14 +40,7 @@ function parseProgress(raw: string | null): UserProgress {
 
   try {
     const parsed = JSON.parse(raw) as Partial<UserProgress>;
-    return {
-      version: 1,
-      settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
-      stats: {
-        ...structuredClone(EMPTY_STATS),
-        ...parsed.stats,
-      },
-    };
+    return normalizeProgress({ version: 1, settings: parsed.settings, stats: parsed.stats });
   } catch {
     return defaultProgress();
   }
@@ -77,6 +74,14 @@ export function normalizeProgress(value: unknown): UserProgress {
 
   const settings = isRecord(value.settings) ? value.settings : {};
   const stats = isRecord(value.stats) ? value.stats : {};
+  const validIntervalIds = new Set(INTERVALS.map((interval) => interval.id));
+  const enabledIntervalIds = Array.isArray(settings.enabledIntervalIds)
+    ? settings.enabledIntervalIds.filter((id): id is string => typeof id === 'string' && validIntervalIds.has(id))
+    : DEFAULT_SETTINGS.enabledIntervalIds;
+  const intervalDirection = settings.intervalDirection === 'up' || settings.intervalDirection === 'down'
+    ? settings.intervalDirection
+    : DEFAULT_SETTINGS.intervalDirection;
+  const theme = settings.theme === 'light' ? 'light' : DEFAULT_SETTINGS.theme;
 
   return {
     version: 1,
@@ -87,6 +92,9 @@ export function normalizeProgress(value: unknown): UserProgress {
       showDegrees: typeof settings.showDegrees === 'boolean' ? settings.showDegrees : DEFAULT_SETTINGS.showDegrees,
       showNoteNames: typeof settings.showNoteNames === 'boolean' ? settings.showNoteNames : DEFAULT_SETTINGS.showNoteNames,
       preferredSynth: 'clean',
+      theme,
+      enabledIntervalIds: enabledIntervalIds.length > 0 ? enabledIntervalIds : DEFAULT_SETTINGS.enabledIntervalIds,
+      intervalDirection,
     },
     stats: {
       'ear-interval': normalizeStats(stats['ear-interval']),

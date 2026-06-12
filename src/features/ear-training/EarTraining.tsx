@@ -1,23 +1,24 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { buildChordMidiNotes, playMidiNotes } from '../../shared/audio/synth';
 import { CHORD_QUALITIES, INTERVALS, NOTE_NAMES_SHARP, randomItem, shuffled } from '../../shared/music/theory';
 import type { ChordQuality, IntervalDefinition, PitchClass } from '../../shared/music/types';
-import type { TrainingArea, TrainingStats } from '../../shared/storage/types';
+import type { IntervalDirection, TrainingArea, TrainingStats, UserSettings } from '../../shared/storage/types';
 
 interface EarTrainingProps {
+  settings: UserSettings;
   intervalStats: TrainingStats;
   chordStats: TrainingStats;
+  onUpdateSettings(settings: Partial<UserSettings>): void;
   onRecordAttempt(area: TrainingArea, correct: boolean): void;
 }
 
-type Direction = 'both' | 'up' | 'down';
 type EarTab = 'interval' | 'chord';
 
 interface IntervalChallenge {
   rootMidi: number;
   secondMidi: number;
   interval: IntervalDefinition;
-  direction: Exclude<Direction, 'both'>;
+  direction: Exclude<IntervalDirection, 'both'>;
 }
 
 interface ChordChallenge {
@@ -26,8 +27,8 @@ interface ChordChallenge {
   midiNotes: number[];
 }
 
-function createIntervalChallenge(direction: Direction): IntervalChallenge {
-  const interval = randomItem(INTERVALS);
+function createIntervalChallenge(direction: IntervalDirection, intervalPool: IntervalDefinition[]): IntervalChallenge {
+  const interval = randomItem(intervalPool.length > 0 ? intervalPool : INTERVALS);
   const resolvedDirection = direction === 'both' ? randomItem(['up', 'down'] as const) : direction;
   const rootMidi = resolvedDirection === 'up' ? 54 + Math.floor(Math.random() * 12) : 66 + Math.floor(Math.random() * 12);
 
@@ -69,17 +70,37 @@ function StatsLine({ stats }: { stats: TrainingStats }) {
   );
 }
 
-function IntervalTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onRecordAttempt(area: TrainingArea, correct: boolean): void }) {
-  const [direction, setDirection] = useState<Direction>('both');
-  const [challenge, setChallenge] = useState(() => createIntervalChallenge('both'));
+function IntervalTrainer({
+  settings,
+  stats,
+  onUpdateSettings,
+  onRecordAttempt,
+}: {
+  settings: UserSettings;
+  stats: TrainingStats;
+  onUpdateSettings(settings: Partial<UserSettings>): void;
+  onRecordAttempt(area: TrainingArea, correct: boolean): void;
+}) {
+  const intervalPool = useMemo(
+    () => INTERVALS.filter((interval) => settings.enabledIntervalIds.includes(interval.id)),
+    [settings.enabledIntervalIds],
+  );
+  const intervalPoolKey = settings.enabledIntervalIds.join('|');
+  const [challenge, setChallenge] = useState(() => createIntervalChallenge(settings.intervalDirection, intervalPool));
   const [answered, setAnswered] = useState<string | null>(null);
+
+  useEffect(() => {
+    const nextChallenge = createIntervalChallenge(settings.intervalDirection, intervalPool);
+    setChallenge(nextChallenge);
+    setAnswered(null);
+  }, [settings.intervalDirection, intervalPoolKey]);
 
   async function play(challengeToPlay = challenge) {
     await playMidiNotes([challengeToPlay.rootMidi, challengeToPlay.secondMidi], { stagger: 0.75, duration: 0.72 });
   }
 
   async function next() {
-    const nextChallenge = createIntervalChallenge(direction);
+    const nextChallenge = createIntervalChallenge(settings.intervalDirection, intervalPool);
     setChallenge(nextChallenge);
     setAnswered(null);
     await play(nextChallenge);
@@ -93,6 +114,23 @@ function IntervalTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onR
     const correct = interval.id === challenge.interval.id;
     setAnswered(interval.id);
     onRecordAttempt('ear-interval', correct);
+  }
+
+  function toggleInterval(intervalId: string) {
+    const selected = settings.enabledIntervalIds.includes(intervalId);
+    if (selected && settings.enabledIntervalIds.length === 1) {
+      return;
+    }
+
+    onUpdateSettings({
+      enabledIntervalIds: selected
+        ? settings.enabledIntervalIds.filter((id) => id !== intervalId)
+        : [...settings.enabledIntervalIds, intervalId],
+    });
+  }
+
+  function selectAllIntervals() {
+    onUpdateSettings({ enabledIntervalIds: INTERVALS.map((interval) => interval.id) });
   }
 
   return (
@@ -119,15 +157,45 @@ function IntervalTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onR
 
       <label className="inline-field">
         方向
-        <select value={direction} onChange={(event) => setDirection(event.target.value as Direction)}>
-          <option value="both">随机</option>
+        <select
+          value={settings.intervalDirection}
+          onChange={(event) => onUpdateSettings({ intervalDirection: event.target.value as IntervalDirection })}
+        >
+          <option value="both">随机上下行</option>
           <option value="up">上行</option>
           <option value="down">下行</option>
         </select>
       </label>
 
+      <div className="interval-picker">
+        <div className="inline-heading">
+          <span className="field-label">训练音程</span>
+          <button type="button" className="ghost-button compact-button" onClick={selectAllIntervals}>
+            全选
+          </button>
+        </div>
+        <div className="interval-toggle-grid">
+          {INTERVALS.map((interval) => {
+            const checked = settings.enabledIntervalIds.includes(interval.id);
+            return (
+              <label className="toggle-chip" key={interval.id}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  disabled={checked && settings.enabledIntervalIds.length === 1}
+                  onChange={() => toggleInterval(interval.id)}
+                />
+                <strong>{interval.shortLabel}</strong>
+                <span>{interval.label}</span>
+              </label>
+            );
+          })}
+        </div>
+        <p className="helper-text">当前题库 {intervalPool.length} 个，至少保留 1 个。</p>
+      </div>
+
       <div className="choice-grid">
-        {INTERVALS.map((interval) => {
+        {intervalPool.map((interval) => {
           const isChosen = answered === interval.id;
           const isCorrect = answered && interval.id === challenge.interval.id;
           return (
@@ -222,7 +290,7 @@ function ChordTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onReco
   );
 }
 
-export function EarTraining({ intervalStats, chordStats, onRecordAttempt }: EarTrainingProps) {
+export function EarTraining({ settings, intervalStats, chordStats, onUpdateSettings, onRecordAttempt }: EarTrainingProps) {
   const [tab, setTab] = useState<EarTab>('interval');
 
   return (
@@ -243,7 +311,12 @@ export function EarTraining({ intervalStats, chordStats, onRecordAttempt }: EarT
       </div>
 
       {tab === 'interval' ? (
-        <IntervalTrainer stats={intervalStats} onRecordAttempt={onRecordAttempt} />
+        <IntervalTrainer
+          settings={settings}
+          stats={intervalStats}
+          onUpdateSettings={onUpdateSettings}
+          onRecordAttempt={onRecordAttempt}
+        />
       ) : (
         <ChordTrainer stats={chordStats} onRecordAttempt={onRecordAttempt} />
       )}

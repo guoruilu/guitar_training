@@ -13,5 +13,6 @@
 - [2026-06-12 项目进展](./2026-06-12/progress.md)
 - [听力训练设计](./features/ear-training.md)
 - [指板训练设计](./features/fretboard-training.md)
+- [需求原文记录](./requirements/2026-06-12.md)
 
 过程日志见项目根目录的 `log/`。

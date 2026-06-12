@@ -1,4 +1,6 @@
 export type TrainingArea = 'ear-interval' | 'ear-chord' | 'arpeggio' | 'scale';
+export type ThemeMode = 'dark' | 'light';
+export type IntervalDirection = 'both' | 'up' | 'down';
 
 export interface TrainingStats {
   attempts: number;
@@ -13,6 +15,9 @@ export interface UserSettings {
   showDegrees: boolean;
   showNoteNames: boolean;
   preferredSynth: 'clean';
+  theme: ThemeMode;
+  enabledIntervalIds: string[];
+  intervalDirection: IntervalDirection;
 }
 
 export interface UserProgress {

@@ -30,6 +30,7 @@ export function App() {
   const [activeFeature, setActiveFeature] = useState<FeatureKey>('ear');
   const [progress, setProgress] = useState(() => storageAdapter.getProgress());
   const [dataStatus, setDataStatus] = useState('');
+  const [helpOpen, setHelpOpen] = useState(false);
   const importInputRef = useRef<HTMLInputElement>(null);
   const combined = useMemo(() => combineStats(Object.values(progress.stats)), [progress.stats]);
 
@@ -81,24 +82,29 @@ export function App() {
   }
 
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-theme={progress.settings.theme}>
       <header className="app-header">
         <div>
           <p className="eyebrow">Guitar Learning Assistant</p>
           <h1>吉他学习辅助工具</h1>
         </div>
-        <nav className="top-nav" aria-label="主功能">
-          {NAV_ITEMS.map((item) => (
-            <button
-              type="button"
-              key={item.id}
-              className={activeFeature === item.id ? 'active' : ''}
-              onClick={() => setActiveFeature(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </nav>
+        <div className="header-actions">
+          <nav className="top-nav" aria-label="主功能">
+            {NAV_ITEMS.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                className={activeFeature === item.id ? 'active' : ''}
+                onClick={() => setActiveFeature(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+          <button type="button" className="secondary-button" onClick={() => setHelpOpen(true)}>
+            说明
+          </button>
+        </div>
       </header>
 
       <main className="workspace">
@@ -146,6 +152,20 @@ export function App() {
             </label>
           </section>
 
+          <section>
+            <p className="panel-label">外观</p>
+            <label>
+              主题
+              <select
+                value={progress.settings.theme}
+                onChange={(event) => updateSettings({ theme: event.target.value as UserSettings['theme'] })}
+              >
+                <option value="dark">暗色</option>
+                <option value="light">明色</option>
+              </select>
+            </label>
+          </section>
+
           <button type="button" className="danger-button" onClick={resetProgress}>
             重置本地记录
           </button>
@@ -180,8 +200,10 @@ export function App() {
         <div className="feature-surface">
           {activeFeature === 'ear' && (
             <EarTraining
+              settings={progress.settings}
               intervalStats={progress.stats['ear-interval']}
               chordStats={progress.stats['ear-chord']}
+              onUpdateSettings={updateSettings}
               onRecordAttempt={recordAttempt}
             />
           )}
@@ -195,6 +217,47 @@ export function App() {
           )}
         </div>
       </main>
+
+      {helpOpen && (
+        <div className="modal-backdrop" role="presentation" onClick={() => setHelpOpen(false)}>
+          <section
+            className="help-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="help-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-title-row">
+              <div>
+                <p className="eyebrow">Guide</p>
+                <h2 id="help-title">使用说明</h2>
+              </div>
+              <button type="button" className="secondary-button" onClick={() => setHelpOpen(false)}>
+                关闭
+              </button>
+            </div>
+
+            <div className="help-grid">
+              <section>
+                <h3>访问地址</h3>
+                <p>在 WSL 中运行时，Windows 浏览器优先使用 Vite 输出的 Network 地址。</p>
+              </section>
+              <section>
+                <h3>听力训练</h3>
+                <p>音程页可选择训练音程池和上下行方向。默认随机上下行，并从已选音程中随机出题。</p>
+              </section>
+              <section>
+                <h3>指板训练</h3>
+                <p>琶音和音阶页支持点选找音、逐题定位和路线练习。空弦在独立列中选择。</p>
+              </section>
+              <section>
+                <h3>数据迁移</h3>
+                <p>左侧数据区可导出 <code>guitar-training-progress.json</code>，换设备后导入即可继续。</p>
+              </section>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

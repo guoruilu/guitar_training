@@ -32,6 +32,7 @@
 - `StorageAdapter` 定义保存接口。
 - `LocalStorageAdapter` 当前实现本地保存。
 - 训练记录自动保存在浏览器 `localStorage`，并通过 JSON 导入/导出支持跨设备迁移。
+- 用户设置包含主题、指板显示、音程训练题库和音程方向。
 
 ## 扩展方向
 
