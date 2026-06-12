@@ -3,6 +3,10 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $distRoot = Join-Path $repoRoot "dist"
 $distIndex = Join-Path $repoRoot "dist\index.html"
+$heartbeatPath = "/__guitar_training_heartbeat"
+$pageClosedPath = "/__guitar_training_page_closed"
+$pageCloseDelay = [TimeSpan]::FromSeconds(15)
+$heartbeatTimeout = [TimeSpan]::FromSeconds(120)
 
 function Get-ContentType([string] $path) {
   switch ([System.IO.Path]::GetExtension($path).ToLowerInvariant()) {
@@ -49,15 +53,55 @@ function Start-StaticApp([string] $root) {
   }
 
   Write-Host "Guitar Learning Assistant is running at $prefix"
-  Write-Host "Keep this window open while using the app. Close it to stop."
+  Write-Host "This window will close automatically shortly after the browser page is closed."
   Start-Process $prefix
 
   $rootFullPath = [System.IO.Path]::GetFullPath($root)
+  $hasHeartbeat = $false
+  $lastHeartbeat = [DateTime]::UtcNow
+  $closeAfter = $null
 
   try {
     while ($listener.IsListening) {
-      $context = $listener.GetContext()
-      $requestPath = [Uri]::UnescapeDataString($context.Request.Url.AbsolutePath.TrimStart("/"))
+      $contextTask = $listener.GetContextAsync()
+      while (-not $contextTask.Wait(1000)) {
+        $now = [DateTime]::UtcNow
+        if ($closeAfter -ne $null -and $now -ge $closeAfter) {
+          Write-Host "Browser page closed; stopping Guitar Learning Assistant."
+          $listener.Stop()
+          break
+        }
+
+        if ($hasHeartbeat -and ($now - $lastHeartbeat) -gt $heartbeatTimeout) {
+          Write-Host "Browser page closed; stopping Guitar Learning Assistant."
+          $listener.Stop()
+          break
+        }
+      }
+
+      if (-not $listener.IsListening) {
+        break
+      }
+
+      $context = $contextTask.GetAwaiter().GetResult()
+      $absolutePath = $context.Request.Url.AbsolutePath
+      if ($absolutePath -eq $heartbeatPath) {
+        $hasHeartbeat = $true
+        $lastHeartbeat = [DateTime]::UtcNow
+        $closeAfter = $null
+        $context.Response.StatusCode = 204
+        $context.Response.Close()
+        continue
+      }
+
+      if ($absolutePath -eq $pageClosedPath) {
+        $closeAfter = [DateTime]::UtcNow + $pageCloseDelay
+        $context.Response.StatusCode = 204
+        $context.Response.Close()
+        continue
+      }
+
+      $requestPath = [Uri]::UnescapeDataString($absolutePath.TrimStart("/"))
       if ([string]::IsNullOrWhiteSpace($requestPath)) {
         $requestPath = "index.html"
       }

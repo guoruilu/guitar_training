@@ -11,6 +11,12 @@ const isWsl = Boolean(process.env.WSL_DISTRO_NAME || process.env.WSL_INTEROP);
 const npmCommand = isWindows ? 'npm.cmd' : 'npm';
 const distRoot = resolve(repoRoot, 'dist');
 const distIndex = resolve(repoRoot, 'dist', 'index.html');
+const localServerPortMin = 5190;
+const localServerPortMax = 5289;
+const heartbeatPath = '/__guitar_training_heartbeat';
+const pageClosedPath = '/__guitar_training_page_closed';
+const pageCloseDelayMs = 15000;
+const heartbeatTimeoutMs = 120000;
 let opened = false;
 let outputBuffer = '';
 
@@ -73,6 +79,9 @@ function openExternal(url) {
       detached: true,
       stdio: 'ignore',
     });
+    opener.on('error', () => {
+      console.log(`Open this URL manually: ${url}`);
+    });
     opener.unref();
   } catch {
     console.log(`Open this URL manually: ${url}`);
@@ -105,9 +114,25 @@ function maybeOpenBrowser() {
   openExternal(url);
 }
 
-function startPackagedApp() {
-  const server = createServer((request, response) => {
+function createPackagedServer(state) {
+  return createServer((request, response) => {
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+    if (url.pathname === heartbeatPath) {
+      state.hasHeartbeat = true;
+      state.lastHeartbeat = Date.now();
+      state.closeAfter = 0;
+      response.writeHead(204, { 'Cache-Control': 'no-store' });
+      response.end();
+      return;
+    }
+
+    if (url.pathname === pageClosedPath) {
+      state.closeAfter = Date.now() + pageCloseDelayMs;
+      response.writeHead(204, { 'Cache-Control': 'no-store' });
+      response.end();
+      return;
+    }
+
     const requestPath = decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname);
     const candidate = resolve(distRoot, `.${requestPath}`);
     const filePath = candidate.startsWith(distRoot) && existsSync(candidate) ? candidate : distIndex;
@@ -123,21 +148,65 @@ function startPackagedApp() {
       response.end(data);
     });
   });
+}
 
-  server.listen(0, '127.0.0.1', () => {
-    const address = server.address();
-    if (!address || typeof address === 'string') {
-      throw new Error('Unable to determine local app URL.');
-    }
+function startPackagedApp() {
+  const state = {
+    hasHeartbeat: false,
+    lastHeartbeat: Date.now(),
+    closeAfter: 0,
+  };
 
-    const url = `http://127.0.0.1:${address.port}/`;
-    console.log(`Guitar Learning Assistant is running at ${url}`);
-    console.log('Keep this process running while using the app.');
-    openExternal(url);
-  });
+  function startServer(port) {
+    const server = createPackagedServer(state);
 
-  process.on('SIGINT', () => server.close(() => process.exit(0)));
-  process.on('SIGTERM', () => server.close(() => process.exit(0)));
+    server.once('error', (error) => {
+      if ((error.code === 'EADDRINUSE' || error.code === 'EACCES') && port < localServerPortMax) {
+        startServer(port + 1);
+        return;
+      }
+
+      console.error(`Unable to start local app server on ports ${localServerPortMin}-${localServerPortMax}.`);
+      console.error(error.message);
+      process.exit(1);
+    });
+
+    server.listen(port, '127.0.0.1', () => {
+      let stopping = false;
+      const stopServer = (message) => {
+        if (stopping) {
+          return;
+        }
+
+        stopping = true;
+        clearInterval(shutdownTimer);
+        console.log(message);
+        server.close(() => process.exit(0));
+      };
+
+      const shutdownTimer = setInterval(() => {
+        const now = Date.now();
+        if (state.closeAfter && now >= state.closeAfter) {
+          stopServer('Browser page closed; stopping Guitar Learning Assistant.');
+          return;
+        }
+
+        if (state.hasHeartbeat && now - state.lastHeartbeat > heartbeatTimeoutMs) {
+          stopServer('Browser page closed; stopping Guitar Learning Assistant.');
+        }
+      }, 1000);
+
+      const url = `http://127.0.0.1:${port}/`;
+      console.log(`Guitar Learning Assistant is running at ${url}`);
+      console.log('This process will close automatically shortly after the browser page is closed.');
+      openExternal(url);
+
+      process.on('SIGINT', () => stopServer('Stopping Guitar Learning Assistant.'));
+      process.on('SIGTERM', () => stopServer('Stopping Guitar Learning Assistant.'));
+    });
+  }
+
+  startServer(localServerPortMin);
 }
 
 function startDevServer() {

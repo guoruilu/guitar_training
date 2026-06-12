@@ -45,3 +45,6 @@
 - 发布包构建：新增 GitHub Actions workflow，自动运行测试/构建并上传 `guitar-training-windows` 静态包，普通 Windows 用户下载后双击 `start-guitar-training.cmd` 即可运行。
 - Windows 空白页修复：不再直接用 `file://` 打开 `dist/index.html`；Windows 启动器改为用 PowerShell 启动本机静态服务并打开 `http://127.0.0.1:<port>/`，发布包同步包含 `scripts/start-windows.ps1`。
 - Windows 启动端口占用修复：用户双击 `start-guitar-training.cmd` 后在 `HttpListener.Start()` 收到“另一个程序正在使用此文件，进程无法访问”。原因是原脚本先用普通 TCP 检查端口，再启动 `HttpListener`，两者可用性判断不完全等价。已改为在 `5190-5289` 范围内直接逐个尝试启动 `HttpListener`，遇到占用或保留端口自动跳过，并在全部失败时提示关闭旧启动窗口后重试。
+- 发布包自动退出：用户反馈打开软件后关闭浏览器，`cmd` 窗口仍未关闭。新增前端本机服务心跳 `src/shared/runtime/localServerHeartbeat.ts`，仅在 `127.0.0.1` 或 `localhost` 的 `5190-5289` 端口启用；Windows PowerShell 静态服务和 Node 静态服务新增心跳与页面关闭端点。关闭页面时服务延迟约 15 秒退出，刷新页面时由新心跳取消退出；心跳超时作为兜底。
+- 启动器烟测发现 `xdg-open` 缺失时 Node 跨平台启动器会因异步 `spawn` error 退出。已为打开浏览器的子进程补充 `error` 事件处理，缺少系统打开器时改为提示手动打开 URL，不影响本地服务继续运行。
+- 运行验证：`node --check scripts/launch-dev.mjs`、PowerShell 脚本解析、`npm run test`、`npm run build` 均通过。Node 静态服务烟测中，首页返回 200，心跳/关闭端点返回 204；发送关闭信号后再发心跳可取消退出并保持首页 200，发送真实关闭信号后进程自动退出。
