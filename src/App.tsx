@@ -88,9 +88,9 @@ export function App() {
                 value={progress.settings.fretCount}
                 onChange={(event) => updateSettings({ fretCount: Number(event.target.value) })}
               >
-                <option value={12}>0-12</option>
-                <option value={15}>0-15</option>
-                <option value={17}>0-17</option>
+                <option value={12}>空弦 + 1-12</option>
+                <option value={15}>空弦 + 1-15</option>
+                <option value={17}>空弦 + 1-17</option>
               </select>
             </label>
             <label className="checkbox-row">

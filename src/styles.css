@@ -318,7 +318,7 @@ select {
 .fret-number-row,
 .fret-string-row {
   display: grid;
-  min-width: 680px;
+  min-width: 740px;
 }
 
 .fret-number-row {
@@ -338,6 +338,10 @@ select {
   justify-content: center;
 }
 
+.open-string-heading {
+  color: #5f574c;
+}
+
 .fret-cell {
   align-items: center;
   background:
@@ -350,6 +354,31 @@ select {
   justify-content: center;
   min-width: 42px;
   padding: 0;
+}
+
+.open-string-cell {
+  background: #eee7da;
+  border-color: #b8aa97;
+  margin-right: 8px;
+  min-width: 54px;
+}
+
+.open-string-cell span {
+  background: #ffffff;
+  border: 1px solid #d2c7b7;
+}
+
+.open-string-cell.selected span,
+.open-string-cell.selected.target span {
+  background: #1d6f5f;
+  border-color: #1d6f5f;
+  color: #ffffff;
+}
+
+.open-string-cell.wrong span {
+  background: #b84b3a;
+  border-color: #b84b3a;
+  color: #ffffff;
 }
 
 .fret-cell span {

@@ -34,6 +34,11 @@ function labelForPosition(
   return labels.join(' ');
 }
 
+function ariaPositionLabel(position: FretPosition): string {
+  const fretLabel = position.fret === 0 ? '空弦' : `${position.fret}品`;
+  return `${position.stringNumber}弦 ${fretLabel} ${noteName(position.pitchClass)}`;
+}
+
 export function Fretboard({
   fretCount,
   selectedKeys,
@@ -49,52 +54,66 @@ export function Fretboard({
   const strings = Array.from({ length: 6 }, (_, stringIndex) =>
     positions.filter((position) => position.stringIndex === stringIndex),
   );
+  const gridTemplateColumns = `48px 62px repeat(${fretCount}, minmax(42px, 1fr))`;
+
+  function renderPositionButton(position: FretPosition, isOpenString = false) {
+    const key = positionKey(position);
+    const isSelected = selected.has(key);
+    const isTarget = targetPitchClasses.includes(position.pitchClass);
+    const classes = [
+      'fret-cell',
+      isOpenString ? 'open-string-cell' : '',
+      isSelected ? 'selected' : '',
+      revealed && isTarget ? 'target' : '',
+      revealed && isSelected && !isTarget ? 'wrong' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    const trainingLabel = isSelected || revealed
+      ? labelForPosition(position, targetPitchClasses, targetDegrees, showNoteNames, showDegrees)
+      : '';
+    const visibleLabel = trainingLabel || (isOpenString && showNoteNames ? position.noteName : '');
+
+    return (
+      <button
+        className={classes}
+        key={key}
+        type="button"
+        onClick={() => onToggle(position)}
+        aria-pressed={isSelected}
+        aria-label={ariaPositionLabel(position)}
+      >
+        <span>{visibleLabel || (isOpenString ? '空弦' : ' ')}</span>
+      </button>
+    );
+  }
 
   return (
     <div className="fretboard-shell" aria-label="吉他指板">
-      <div className="fret-number-row" style={{ gridTemplateColumns: `48px repeat(${fretCount + 1}, minmax(42px, 1fr))` }}>
+      <div className="fret-number-row" style={{ gridTemplateColumns }}>
         <span />
-        {Array.from({ length: fretCount + 1 }, (_, fret) => (
-          <span key={fret}>{fret}</span>
+        <span className="open-string-heading">空弦</span>
+        {Array.from({ length: fretCount }, (_, index) => (
+          <span key={index + 1}>{index + 1}</span>
         ))}
       </div>
 
-      {strings.map((stringPositions) => (
-        <div
-          className="fret-string-row"
-          key={stringPositions[0].stringIndex}
-          style={{ gridTemplateColumns: `48px repeat(${fretCount + 1}, minmax(42px, 1fr))` }}
-        >
-          <span className="string-name">{stringPositions[0].stringNumber}弦</span>
-          {stringPositions.map((position) => {
-            const key = positionKey(position);
-            const isSelected = selected.has(key);
-            const isTarget = targetPitchClasses.includes(position.pitchClass);
-            const classes = [
-              'fret-cell',
-              isSelected ? 'selected' : '',
-              revealed && isTarget ? 'target' : '',
-              revealed && isSelected && !isTarget ? 'wrong' : '',
-            ]
-              .filter(Boolean)
-              .join(' ');
-            const visibleLabel = isSelected || revealed ? labelForPosition(position, targetPitchClasses, targetDegrees, showNoteNames, showDegrees) : '';
+      {strings.map((stringPositions) => {
+        const openPosition = stringPositions.find((position) => position.fret === 0);
+        const frettedPositions = stringPositions.filter((position) => position.fret > 0);
 
-            return (
-              <button
-                className={classes}
-                key={key}
-                type="button"
-                onClick={() => onToggle(position)}
-                aria-pressed={isSelected}
-                aria-label={`${position.stringNumber}弦 ${position.fret}品 ${noteName(position.pitchClass)}`}
-              >
-                <span>{visibleLabel || ' '}</span>
-              </button>
-            );
-          })}
-        </div>
-      ))}
+        return (
+          <div
+            className="fret-string-row"
+            key={stringPositions[0].stringIndex}
+            style={{ gridTemplateColumns }}
+          >
+            <span className="string-name">{stringPositions[0].stringNumber}弦</span>
+            {openPosition && renderPositionButton(openPosition, true)}
+            {frettedPositions.map((position) => renderPositionButton(position))}
+          </div>
+        );
+      })}
     </div>
   );
 }
