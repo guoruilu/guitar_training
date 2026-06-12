@@ -44,3 +44,4 @@
 - 普通用户启动调整：`start-guitar-training.cmd` 优先打开预构建 `dist/index.html`，不要求普通用户具备 WSL/npm；Vite 改为相对 base，便于发布包本地双击运行。
 - 发布包构建：新增 GitHub Actions workflow，自动运行测试/构建并上传 `guitar-training-windows` 静态包，普通 Windows 用户下载后双击 `start-guitar-training.cmd` 即可运行。
 - Windows 空白页修复：不再直接用 `file://` 打开 `dist/index.html`；Windows 启动器改为用 PowerShell 启动本机静态服务并打开 `http://127.0.0.1:<port>/`，发布包同步包含 `scripts/start-windows.ps1`。
+- Windows 启动端口占用修复：用户双击 `start-guitar-training.cmd` 后在 `HttpListener.Start()` 收到“另一个程序正在使用此文件，进程无法访问”。原因是原脚本先用普通 TCP 检查端口，再启动 `HttpListener`，两者可用性判断不完全等价。已改为在 `5190-5289` 范围内直接逐个尝试启动 `HttpListener`，遇到占用或保留端口自动跳过，并在全部失败时提示关闭旧启动窗口后重试。

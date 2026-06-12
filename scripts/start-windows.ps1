@@ -19,27 +19,34 @@ function Get-ContentType([string] $path) {
   }
 }
 
-function Find-FreePort {
+function Start-StaticApp([string] $root) {
+  $listener = $null
+  $prefix = $null
+  $lastStartError = $null
+
   for ($port = 5190; $port -lt 5290; $port++) {
+    $candidatePrefix = "http://127.0.0.1:$port/"
+    $candidateListener = [System.Net.HttpListener]::new()
+    $candidateListener.Prefixes.Add($candidatePrefix)
+
     try {
-      $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $port)
-      $listener.Start()
-      $listener.Stop()
-      return $port
-    } catch {
+      $candidateListener.Start()
+      $listener = $candidateListener
+      $prefix = $candidatePrefix
+      break
+    } catch [System.Net.HttpListenerException] {
+      $lastStartError = $_.Exception.Message
+      $candidateListener.Close()
       continue
+    } catch {
+      $candidateListener.Close()
+      throw
     }
   }
 
-  throw "No available local port found."
-}
-
-function Start-StaticApp([string] $root) {
-  $port = Find-FreePort
-  $prefix = "http://127.0.0.1:$port/"
-  $listener = [System.Net.HttpListener]::new()
-  $listener.Prefixes.Add($prefix)
-  $listener.Start()
+  if (-not $listener) {
+    throw "No available local HTTP port found between 5190 and 5289. Close other Guitar Learning Assistant windows and try again. Last error: $lastStartError"
+  }
 
   Write-Host "Guitar Learning Assistant is running at $prefix"
   Write-Host "Keep this window open while using the app. Close it to stop."
