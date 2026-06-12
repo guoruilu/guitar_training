@@ -1,6 +1,7 @@
 import type { StorageAdapter, TrainingArea, TrainingStats, UserProgress, UserSettings } from './types';
 
-const STORAGE_KEY = 'guitar-learning-assistant:progress:v1';
+export const STORAGE_KEY = 'guitar-learning-assistant:progress:v1';
+export const EXPORT_FILE_NAME = 'guitar-training-progress.json';
 
 const EMPTY_STATS: Record<TrainingArea, TrainingStats> = {
   'ear-interval': { attempts: 0, correct: 0, streak: 0, bestStreak: 0 },
@@ -48,6 +49,54 @@ function parseProgress(raw: string | null): UserProgress {
   }
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function normalizeStats(value: unknown): TrainingStats {
+  const input = isRecord(value) ? value : {};
+  const attempts = Number(input.attempts) || 0;
+  const correct = Number(input.correct) || 0;
+  const streak = Number(input.streak) || 0;
+  const bestStreak = Number(input.bestStreak) || 0;
+  const lastPracticedAt = typeof input.lastPracticedAt === 'string' ? input.lastPracticedAt : undefined;
+
+  return {
+    attempts: Math.max(0, attempts),
+    correct: Math.max(0, Math.min(correct, attempts)),
+    streak: Math.max(0, streak),
+    bestStreak: Math.max(0, bestStreak),
+    ...(lastPracticedAt ? { lastPracticedAt } : {}),
+  };
+}
+
+export function normalizeProgress(value: unknown): UserProgress {
+  if (!isRecord(value) || value.version !== 1) {
+    throw new Error('Unsupported progress file');
+  }
+
+  const settings = isRecord(value.settings) ? value.settings : {};
+  const stats = isRecord(value.stats) ? value.stats : {};
+
+  return {
+    version: 1,
+    settings: {
+      ...DEFAULT_SETTINGS,
+      ...settings,
+      fretCount: [12, 15, 17].includes(Number(settings.fretCount)) ? Number(settings.fretCount) : DEFAULT_SETTINGS.fretCount,
+      showDegrees: typeof settings.showDegrees === 'boolean' ? settings.showDegrees : DEFAULT_SETTINGS.showDegrees,
+      showNoteNames: typeof settings.showNoteNames === 'boolean' ? settings.showNoteNames : DEFAULT_SETTINGS.showNoteNames,
+      preferredSynth: 'clean',
+    },
+    stats: {
+      'ear-interval': normalizeStats(stats['ear-interval']),
+      'ear-chord': normalizeStats(stats['ear-chord']),
+      arpeggio: normalizeStats(stats.arpeggio),
+      scale: normalizeStats(stats.scale),
+    },
+  };
+}
+
 export class LocalStorageAdapter implements StorageAdapter {
   getProgress(): UserProgress {
     if (!canUseLocalStorage()) {
@@ -60,6 +109,12 @@ export class LocalStorageAdapter implements StorageAdapter {
   saveSettings(settings: UserSettings): void {
     const progress = this.getProgress();
     this.save({ ...progress, settings });
+  }
+
+  importProgress(progress: unknown): UserProgress {
+    const next = normalizeProgress(progress);
+    this.save(next);
+    return next;
   }
 
   recordAttempt(area: TrainingArea, correct: boolean): UserProgress {

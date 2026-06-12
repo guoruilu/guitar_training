@@ -24,6 +24,7 @@ export interface UserProgress {
 export interface StorageAdapter {
   getProgress(): UserProgress;
   saveSettings(settings: UserSettings): void;
+  importProgress(progress: unknown): UserProgress;
   recordAttempt(area: TrainingArea, correct: boolean): UserProgress;
   resetProgress(): UserProgress;
 }

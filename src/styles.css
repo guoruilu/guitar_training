@@ -211,6 +211,53 @@ select {
   width: 18px;
 }
 
+.storage-box {
+  background: #f4efe7;
+  border: 1px solid #ded5c7;
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+}
+
+.storage-box span {
+  color: #6b6256;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.storage-box code {
+  color: #25231f;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.storage-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.storage-actions button {
+  min-width: 0;
+  padding: 0 10px;
+}
+
+.storage-status {
+  color: #5d554b;
+  font-size: 13px;
+  margin: 0;
+}
+
+.visually-hidden {
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .feature-surface {
   min-width: 0;
 }

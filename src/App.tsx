@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ArpeggioTraining } from './features/arpeggio-training/ArpeggioTraining';
 import { EarTraining } from './features/ear-training/EarTraining';
 import { ScaleTraining } from './features/scale-training/ScaleTraining';
-import { storageAdapter } from './shared/storage/localStorageAdapter';
+import { EXPORT_FILE_NAME, STORAGE_KEY, storageAdapter } from './shared/storage/localStorageAdapter';
 import type { TrainingArea, TrainingStats, UserSettings } from './shared/storage/types';
 
 type FeatureKey = 'ear' | 'arpeggio' | 'scale';
@@ -29,6 +29,8 @@ function combineStats(stats: TrainingStats[]) {
 export function App() {
   const [activeFeature, setActiveFeature] = useState<FeatureKey>('ear');
   const [progress, setProgress] = useState(() => storageAdapter.getProgress());
+  const [dataStatus, setDataStatus] = useState('');
+  const importInputRef = useRef<HTMLInputElement>(null);
   const combined = useMemo(() => combineStats(Object.values(progress.stats)), [progress.stats]);
 
   function updateSettings(partial: Partial<UserSettings>) {
@@ -43,6 +45,39 @@ export function App() {
 
   function resetProgress() {
     setProgress(storageAdapter.resetProgress());
+    setDataStatus('本地记录已重置');
+  }
+
+  function exportProgress() {
+    const blob = new Blob([JSON.stringify(storageAdapter.getProgress(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = EXPORT_FILE_NAME;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    setDataStatus(`已导出 ${EXPORT_FILE_NAME}`);
+  }
+
+  async function importProgressFile(file: File | undefined) {
+    if (!file) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(await file.text());
+      const next = storageAdapter.importProgress(parsed);
+      setProgress(next);
+      setDataStatus(`已导入 ${file.name}`);
+    } catch {
+      setDataStatus('导入失败：文件格式不匹配');
+    } finally {
+      if (importInputRef.current) {
+        importInputRef.current.value = '';
+      }
+    }
   }
 
   return (
@@ -114,6 +149,32 @@ export function App() {
           <button type="button" className="danger-button" onClick={resetProgress}>
             重置本地记录
           </button>
+
+          <section>
+            <p className="panel-label">数据位置</p>
+            <div className="storage-box">
+              <span>Browser localStorage</span>
+              <code>{STORAGE_KEY}</code>
+              <span>迁移文件</span>
+              <code>{EXPORT_FILE_NAME}</code>
+            </div>
+            <div className="storage-actions">
+              <button type="button" className="secondary-button" onClick={exportProgress}>
+                导出数据
+              </button>
+              <button type="button" className="secondary-button" onClick={() => importInputRef.current?.click()}>
+                导入数据
+              </button>
+              <input
+                ref={importInputRef}
+                type="file"
+                accept="application/json,.json"
+                className="visually-hidden"
+                onChange={(event) => importProgressFile(event.target.files?.[0])}
+              />
+            </div>
+            {dataStatus && <p className="storage-status">{dataStatus}</p>}
+          </section>
         </aside>
 
         <div className="feature-surface">

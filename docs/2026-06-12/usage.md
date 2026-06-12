@@ -7,7 +7,7 @@ npm install
 npm run dev
 ```
 
-浏览器打开终端显示的本地地址。
+在 WSL 中启动时，Windows 浏览器优先打开 Vite 输出的 `Network` 地址，例如 `http://172.20.84.237:5174/`。`localhost` 在部分 WSL/Windows 网络配置下可能无法转发。
 
 ## 验证
 
@@ -34,3 +34,9 @@ npm run build
 - 指板显示设置。
 
 记录保存在浏览器本地；清理浏览器站点数据会清除记录。
+
+页面左侧会显示当前保存位置：
+
+- 自动保存：`Browser localStorage`
+- key：`guitar-learning-assistant:progress:v1`
+- 迁移设备：点击“导出数据”得到 `guitar-training-progress.json`，在新设备中打开项目后点击“导入数据”。
