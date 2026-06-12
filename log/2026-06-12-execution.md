@@ -1,0 +1,34 @@
+# 2026-06-12 执行日志
+
+## 环境
+
+- 工作目录：`/mnt/e/wps/Projects/guitar`
+- Node：`v22.22.2`
+- npm：`11.14.1`
+- 初始状态：空目录，无已有应用代码。
+
+## 执行记录
+
+- 建立项目配置：`package.json`、`vite.config.ts`、`tsconfig.json`、`index.html`。
+- 建立功能目录：`ear-training`、`arpeggio-training`、`scale-training`。
+- 建立共享目录：`music`、`audio`、`fretboard`、`storage`。
+- 建立文档目录：`docs/2026-06-12`、`docs/features`。
+- 建立日志目录：`log`。
+- 实现 Web Audio 合成播放。
+- 实现本地保存适配器。
+- 实现三大训练模块首版。
+
+## 已发现并修复的问题
+
+- 指板逐题定位中，当目标音为 `C` 对应 pitch class `0` 时，布尔判断可能误判为无目标。已改为显式判断 `undefined`。
+
+## 待记录
+
+- 依赖安装：`npm install` 成功，安装 94 个包，0 个漏洞。
+- 单元测试：`npm run test` 成功，1 个测试文件、5 个用例通过。
+- 构建：`npm run build` 成功，生成 `dist/`。
+- 开发服务器：首次在沙箱内启动失败，错误为 `listen EPERM: operation not permitted 0.0.0.0:5173`；使用提升权限启动成功。
+- Smoke test：沙箱内 `curl localhost` 失败，原因是沙箱网络无法解析/连接本地服务；使用同一提升权限环境请求 `http://127.0.0.1:5173/` 返回 HTTP 200。
+- 构建脚本调整：将 `tsc -b` 改为 `tsc --noEmit`，避免生成 `tsconfig*.tsbuildinfo` 和 `vite.config.js/.d.ts`；已清理本次生成的这些文件并加入 `.gitignore`。
+- 文档复查：确认 `docs/` 已包含项目索引、代码计划、架构说明、使用说明、项目进展和功能设计；将进展文档中的“待验证”改为“验证结果”。
+- Git 绑定：初始化本地 Git 仓库，将默认分支设为 `main`，添加远程仓库 `origin = git@github.com:guoruilu/guitar_training.git`。

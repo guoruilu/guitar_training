@@ -1,0 +1,29 @@
+export type TrainingArea = 'ear-interval' | 'ear-chord' | 'arpeggio' | 'scale';
+
+export interface TrainingStats {
+  attempts: number;
+  correct: number;
+  streak: number;
+  bestStreak: number;
+  lastPracticedAt?: string;
+}
+
+export interface UserSettings {
+  fretCount: number;
+  showDegrees: boolean;
+  showNoteNames: boolean;
+  preferredSynth: 'clean';
+}
+
+export interface UserProgress {
+  version: 1;
+  settings: UserSettings;
+  stats: Record<TrainingArea, TrainingStats>;
+}
+
+export interface StorageAdapter {
+  getProgress(): UserProgress;
+  saveSettings(settings: UserSettings): void;
+  recordAttempt(area: TrainingArea, correct: boolean): UserProgress;
+  resetProgress(): UserProgress;
+}
