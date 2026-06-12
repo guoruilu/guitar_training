@@ -2,12 +2,36 @@
 
 ## 启动
 
+### 普通用户
+
+普通用户不需要 WSL、npm 或命令行。请使用发布包或 GitHub Actions 产物 `guitar-training-windows`，其中包含已经构建好的 `dist/index.html`。Windows 下双击：
+
+```text
+start-guitar-training.cmd
+```
+
+如果存在 `dist/index.html`，它会直接打开本地网页应用。
+
+### 开发者
+
+Linux/macOS/WSL 可运行：
+
+```bash
+./start-guitar-training.sh
+```
+
+命令行手动启动：
+
 ```bash
 npm install
 npm run dev
 ```
 
-在 WSL 中启动时，Windows 浏览器优先打开 Vite 输出的 `Network` 地址，例如 `http://172.20.84.237:5174/`。`localhost` 在部分 WSL/Windows 网络配置下可能无法转发。
+如果没有 `dist/index.html`，启动器会进入开发模式：通过 WSL 或本机 Node.js 启动项目。开发服务器固定使用 `5180` 端口；如果该端口已被旧进程占用，启动会直接失败而不是自动换端口。这样可以避免浏览器打开旧服务。关闭浏览器标签页不会关闭开发服务器，需要在启动窗口按 `Ctrl+C` 或直接关闭启动窗口。
+
+在 WSL 中启动时，Windows 浏览器优先打开 Vite 输出的 `Network` 地址，例如 `http://172.20.84.237:5180/`。`localhost` 在部分 WSL/Windows 网络配置下可能无法转发。
+
+刷新页面会请求当前版本。普通用户使用发布包时，更新软件需要替换为新的发布包；开发者使用 dev server 时，如果看不到改动，先确认只运行了一个 `npm run dev`，并使用 `5180` 的 Network 地址。
 
 ## 验证
 
@@ -25,6 +49,7 @@ npm run build
 - 指板主区域从 `1` 品开始；空弦音在独立列中选择和显示。
 - 顶部 `说明` 按钮会打开软件使用说明。
 - 左侧 `外观` 可以切换暗色/明色主题；默认主题为暗色。
+- 随机出题使用浏览器/运行时的加密随机源；重新启动或重置本地数据不会复用固定随机序列。
 
 ## 本地记录
 

@@ -1,5 +1,5 @@
 import type { FretboardChallenge, FretboardExerciseMode, PitchClass } from './types';
-import { randomItem, transpose } from './theory';
+import { randomInt, randomItem, transpose } from './theory';
 
 const ROOTS: PitchClass[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 const MODES: FretboardExerciseMode[] = ['find-all', 'single-note', 'route'];
@@ -21,10 +21,10 @@ export function createFretboardChallenge(input: {
   degrees: string[];
 }): FretboardChallenge {
   const targetPitchClasses = input.intervals.map((interval) => transpose(input.root, interval));
-  const focusIndex = input.mode === 'single-note' ? Math.floor(Math.random() * targetPitchClasses.length) : undefined;
+  const focusIndex = input.mode === 'single-note' ? randomInt(targetPitchClasses.length) : undefined;
 
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+    id: `${Date.now()}-${randomInt(1_000_000_000).toString(36)}`,
     mode: input.mode,
     title: input.title,
     root: input.root,

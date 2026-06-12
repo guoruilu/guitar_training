@@ -8,6 +8,14 @@
 
 ## Run
 
+普通用户优先使用打包版本：打开包含 `dist/index.html` 的发布包，双击：
+
+```text
+start-guitar-training.cmd
+```
+
+如果你是从源码开发，再使用命令行：
+
 ```bash
 npm install
 npm run dev

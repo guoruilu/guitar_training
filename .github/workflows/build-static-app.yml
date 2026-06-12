@@ -1,0 +1,43 @@
+name: Build static app
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-static-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm run test
+
+      - name: Build
+        run: npm run build
+
+      - name: Assemble Windows static package
+        run: |
+          mkdir -p guitar-training-windows
+          cp -r dist guitar-training-windows/
+          cp start-guitar-training.cmd guitar-training-windows/
+          cp README.md guitar-training-windows/
+
+      - name: Upload static package
+        uses: actions/upload-artifact@v4
+        with:
+          name: guitar-training-windows
+          path: guitar-training-windows

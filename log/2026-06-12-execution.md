@@ -39,3 +39,7 @@
 - 指板显示调整：主指板品位编号改为从 `1` 品开始，空弦音保留为可点选位置但以独立“空弦”列呈现，并同步更新使用说明和指板训练文档。
 - 本地数据迁移：设置区新增数据位置展示、JSON 导出和导入；文档补充 WSL 下 Windows 浏览器应优先使用 Vite `Network` 地址，以及跨设备复制 `guitar-training-progress.json` 的迁移方式。
 - 听力与外观更新：音程训练新增可选音程题库，默认随机上下行；新增顶部说明弹窗；新增暗色/明色主题并将默认设置为暗色；在 `docs/requirements/2026-06-12.md` 原文记录用户需求。
+- 随机与开发服务调整：随机选择改为优先使用 `crypto.getRandomValues`，避免固定伪随机序列；`npm run dev` 固定为 `5180 --strictPort`，避免旧服务占用端口后自动换端口导致浏览器看到旧代码；文档记录浏览器不能直接关闭 WSL dev server，需要终端 `Ctrl+C`。
+- 启动入口：新增 Windows 双击入口 `start-guitar-training.cmd`、跨平台 shell 入口 `start-guitar-training.sh` 和 `scripts/launch-dev.mjs`，用于安装依赖、启动固定端口 dev server 并打开浏览器。
+- 普通用户启动调整：`start-guitar-training.cmd` 优先打开预构建 `dist/index.html`，不要求普通用户具备 WSL/npm；Vite 改为相对 base，便于发布包本地双击运行。
+- 发布包构建：新增 GitHub Actions workflow，自动运行测试/构建并上传 `guitar-training-windows` 静态包，普通 Windows 用户下载后双击 `start-guitar-training.cmd` 即可运行。

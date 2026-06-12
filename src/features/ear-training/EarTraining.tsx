@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { buildChordMidiNotes, playMidiNotes } from '../../shared/audio/synth';
-import { CHORD_QUALITIES, INTERVALS, NOTE_NAMES_SHARP, randomItem, shuffled } from '../../shared/music/theory';
+import { CHORD_QUALITIES, INTERVALS, NOTE_NAMES_SHARP, randomInt, randomItem, shuffled } from '../../shared/music/theory';
 import type { ChordQuality, IntervalDefinition, PitchClass } from '../../shared/music/types';
 import type { IntervalDirection, TrainingArea, TrainingStats, UserSettings } from '../../shared/storage/types';
 
@@ -30,7 +30,7 @@ interface ChordChallenge {
 function createIntervalChallenge(direction: IntervalDirection, intervalPool: IntervalDefinition[]): IntervalChallenge {
   const interval = randomItem(intervalPool.length > 0 ? intervalPool : INTERVALS);
   const resolvedDirection = direction === 'both' ? randomItem(['up', 'down'] as const) : direction;
-  const rootMidi = resolvedDirection === 'up' ? 54 + Math.floor(Math.random() * 12) : 66 + Math.floor(Math.random() * 12);
+  const rootMidi = resolvedDirection === 'up' ? 54 + randomInt(12) : 66 + randomInt(12);
 
   return {
     rootMidi,
@@ -41,7 +41,7 @@ function createIntervalChallenge(direction: IntervalDirection, intervalPool: Int
 }
 
 function createChordChallenge(): ChordChallenge {
-  const root = Math.floor(Math.random() * 12) as PitchClass;
+  const root = randomInt(12) as PitchClass;
   const quality = randomItem(CHORD_QUALITIES);
 
   return {

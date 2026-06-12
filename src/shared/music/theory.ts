@@ -100,10 +100,41 @@ export function getScaleDefinition(id: string): ScaleDefinition {
   return scale;
 }
 
+export function randomInt(maxExclusive: number): number {
+  if (!Number.isInteger(maxExclusive) || maxExclusive <= 0) {
+    throw new Error(`Invalid random range: ${maxExclusive}`);
+  }
+
+  const cryptoObject = globalThis.crypto;
+  if (cryptoObject?.getRandomValues) {
+    const limit = 0xffffffff - (0xffffffff % maxExclusive);
+    const randomValues = new Uint32Array(1);
+
+    do {
+      cryptoObject.getRandomValues(randomValues);
+    } while (randomValues[0] >= limit);
+
+    return randomValues[0] % maxExclusive;
+  }
+
+  return Math.floor((Math.random() + Date.now() % 997 / 997) % 1 * maxExclusive);
+}
+
 export function randomItem<T>(items: readonly T[]): T {
-  return items[Math.floor(Math.random() * items.length)];
+  if (items.length === 0) {
+    throw new Error('Cannot choose from an empty list');
+  }
+
+  return items[randomInt(items.length)];
 }
 
 export function shuffled<T>(items: readonly T[]): T[] {
-  return [...items].sort(() => Math.random() - 0.5);
+  const result = [...items];
+
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+
+  return result;
 }

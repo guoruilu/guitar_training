@@ -4,6 +4,13 @@
 
 `src/App.tsx` 负责主导航、设置面板、本地统计总览和三个功能模块的统一调用。
 
+根目录启动入口：
+
+- `start-guitar-training.cmd`：Windows 双击启动入口；优先打开 `dist/index.html`，没有构建产物时进入开发模式。
+- `start-guitar-training.sh`：Linux/macOS/WSL 启动入口。
+- `scripts/launch-dev.mjs`：打开构建产物，或安装依赖、启动 dev server、打开浏览器。
+- `.github/workflows/build-static-app.yml`：在 GitHub 上构建普通用户可下载的 Windows 静态包。
+
 三个功能目录分别是：
 
 - `src/features/ear-training/`
@@ -39,3 +46,5 @@
 - 新增爵士和弦、调式或扩展音阶时，优先扩展 `src/shared/music/theory.ts` 的数据定义。
 - 新增账号同步时，实现新的 `StorageAdapter`，训练模块不需要直接改成后端调用。
 - 新增 MIDI 或麦克风输入时，建议在 `src/shared/audio/` 或新建 `src/shared/input/` 中隔离设备逻辑。
+- 开发服务器固定端口为 `5180` 且使用 strict port，避免多个 Vite 实例导致浏览器访问旧代码。
+- Vite `base` 使用相对路径，保证构建后的 `dist/index.html` 可从本地文件直接打开。
