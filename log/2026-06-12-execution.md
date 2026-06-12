@@ -32,3 +32,6 @@
 - 构建脚本调整：将 `tsc -b` 改为 `tsc --noEmit`，避免生成 `tsconfig*.tsbuildinfo` 和 `vite.config.js/.d.ts`；已清理本次生成的这些文件并加入 `.gitignore`。
 - 文档复查：确认 `docs/` 已包含项目索引、代码计划、架构说明、使用说明、项目进展和功能设计；将进展文档中的“待验证”改为“验证结果”。
 - Git 绑定：初始化本地 Git 仓库，将默认分支设为 `main`，添加远程仓库 `origin = git@github.com:guoruilu/guitar_training.git`。
+- README 更新：补充项目来源说明，明确本项目在人工需求、文档和开发指导下由 OpenAI Codex 生成并维护代码实现。
+- 贡献指南：新增根目录 `AGENTS.md`，说明项目结构、开发命令、编码风格、测试要求、提交/PR 规范和 Codex 相关协作要求。
+- Git 忽略规则：扩展 `.gitignore`，覆盖环境变量、密钥、系统/编辑器文件、工具日志、缓存、压缩包和原始大媒体文件；保留项目过程文档 `log/*.md` 的追踪。
