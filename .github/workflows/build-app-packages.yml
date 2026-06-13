@@ -1,0 +1,79 @@
+name: Build app packages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  web-static:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci --prefix web
+
+      - name: Test web app
+        run: npm --prefix web run test
+
+      - name: Build web app
+        run: npm --prefix web run build
+
+      - name: Assemble Windows static package
+        run: |
+          mkdir -p guitar-training-web-windows/scripts
+          cp -r web/dist guitar-training-web-windows/
+          cp web/scripts/start-windows.ps1 guitar-training-web-windows/scripts/
+          printf '@echo off\r\nsetlocal\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%%~dp0scripts\\start-windows.ps1"\r\nif errorlevel 1 pause\r\n' > guitar-training-web-windows/start-guitar-training.cmd
+          cp README.md guitar-training-web-windows/
+
+      - name: Upload static package
+        uses: actions/upload-artifact@v4
+        with:
+          name: guitar-training-web-windows
+          path: guitar-training-web-windows
+
+  desktop-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            web/package-lock.json
+            desktop/package-lock.json
+
+      - name: Install web dependencies
+        run: npm ci --prefix web
+
+      - name: Install desktop dependencies
+        run: npm ci --prefix desktop
+
+      - name: Test web app
+        run: npm --prefix web run test
+
+      - name: Package Windows desktop app
+        run: npm --prefix desktop run package:win
+
+      - name: Upload Windows desktop package
+        uses: actions/upload-artifact@v4
+        with:
+          name: guitar-training-desktop-windows
+          path: desktop/release/*.exe

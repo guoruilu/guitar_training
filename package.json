@@ -1,24 +1,15 @@
 {
-  "name": "guitar-learning-assistant",
+  "name": "guitar-training",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 5180 --strictPort",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview --host 0.0.0.0",
-    "test": "vitest run"
-  },
-  "dependencies": {
-    "react": "^19.2.1",
-    "react-dom": "^19.2.1"
-  },
-  "devDependencies": {
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
-    "typescript": "^5.9.3",
-    "vite": "^7.2.6",
-    "vitest": "^4.0.15"
+    "dev": "npm --prefix web run dev",
+    "test": "npm --prefix web run test",
+    "build": "npm --prefix web run build",
+    "web:dev": "npm --prefix web run dev",
+    "web:test": "npm --prefix web run test",
+    "web:build": "npm --prefix web run build",
+    "desktop:dev": "npm --prefix desktop run dev",
+    "desktop:package:win": "npm --prefix desktop run package:win"
   }
 }

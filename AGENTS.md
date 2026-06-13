@@ -2,15 +2,13 @@
 
 ## Project Structure & Module Organization
 
-Vite + React + TypeScript browser app. Source code lives in `src/`.
+The repository is split into a web app and a desktop shell.
 
-- `src/features/ear-training/`: interval and chord ear-training UI.
-- `src/features/arpeggio-training/`: fretboard arpeggio entry point.
-- `src/features/scale-training/`: fretboard scale entry point.
-- `src/shared/music/`: theory data, pitch helpers, calculations, and tests.
-- `src/shared/audio/`: Web Audio synth playback.
-- `src/shared/fretboard/`: reusable fretboard UI/practice flow.
-- `src/shared/storage/`: local progress storage/sync interface.
+- `web/src/features/ear-training/`: interval and chord ear-training UI.
+- `web/src/features/arpeggio-training/`: fretboard arpeggio entry point.
+- `web/src/features/scale-training/`: fretboard scale entry point.
+- `web/src/shared/`: music theory, synth audio, fretboard UI, runtime, and local storage.
+- `desktop/`: Electron app that loads `web/dist`.
 - `docs/`: plans, architecture notes, usage, progress, and feature docs.
 - `log/`: execution details, errors, and verification notes.
 
@@ -18,13 +16,15 @@ Place tests next to covered code as `*.test.ts`.
 
 ## Build, Test, and Development Commands
 
-- `npm install`: install locked dependencies.
-- `npm run dev`: start Vite.
-- `npm run test`: run Vitest once.
-- `npm run build`: type-check and build `dist/`.
-- `npm run preview`: serve the build.
+- `npm --prefix web install`: install web dependencies.
+- `npm --prefix desktop install`: install desktop dependencies.
+- `npm run dev`: start the web Vite server from the root.
+- `npm run desktop:dev`: build the web app and open Electron.
+- `npm run test`: run web Vitest tests once.
+- `npm run build`: type-check and build `web/dist`.
+- `npm run desktop:package:win`: build a Windows portable desktop exe.
 
-Do not commit `node_modules/` or `dist/`; both are ignored.
+Do not commit `node_modules/`, `dist/`, or `desktop/release/`; they are ignored.
 
 ## Coding Style & Naming Conventions
 

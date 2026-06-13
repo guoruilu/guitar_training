@@ -1,0 +1,42 @@
+{
+  "name": "guitar-training-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Desktop shell for Guitar Learning Assistant.",
+  "main": "src/main.cjs",
+  "scripts": {
+    "dev": "npm --prefix ../web run build && electron .",
+    "start": "electron .",
+    "package:win": "npm --prefix ../web run build && electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.guitartraining.assistant",
+    "productName": "Guitar Training",
+    "asar": true,
+    "files": [
+      "package.json",
+      "src/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web-dist"
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ]
+    },
+    "portable": {
+      "artifactName": "Guitar-Training-${version}-windows-portable.exe"
+    }
+  }
+}

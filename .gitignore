@@ -3,6 +3,8 @@ node_modules/
 
 # Build and test outputs
 dist/
+desktop/release/
+desktop/out/
 .vite/
 coverage/
 *.tsbuildinfo

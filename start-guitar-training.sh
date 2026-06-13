@@ -2,4 +2,4 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
-node scripts/launch-dev.mjs
+npm --prefix desktop run dev

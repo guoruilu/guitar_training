@@ -1,25 +1,34 @@
 # Guitar Learning Assistant
 
-浏览器端吉他学习辅助工具。首版包括听力训练、指板琶音训练和指板音阶训练。
+吉他学习辅助工具。首版包括听力训练、指板琶音训练和指板音阶训练。
 
 ## Project Origin
 
 本项目是在人工编写的需求、文档和开发指导下，由 OpenAI Codex 生成并维护代码实现的项目。
 
+## Structure
+
+- `web/`：Vite + React + TypeScript 浏览器端应用。
+- `desktop/`：Electron 桌面应用壳，加载 `web/dist`。
+- `docs/`：项目文档。
+- `log/`：执行和排错记录。
+
 ## Run
 
-普通用户优先使用打包版本：打开包含 `dist/` 的发布包，双击：
+普通 Windows 用户优先使用 GitHub Actions 生成的桌面产物 `guitar-training-desktop-windows`，双击其中的 portable exe 即可运行，不需要 WSL、Node.js 或 npm。
 
-```text
-start-guitar-training.cmd
-```
-
-启动器会打开一个本机网页地址；关闭浏览器页面后，启动窗口会在约 15 秒内自动退出。
-
-如果你是从源码开发，再使用命令行：
+源码开发可在根目录运行：
 
 ```bash
-npm install
+npm run desktop:dev
+```
+
+这会先构建 `web/`，再打开 Electron 桌面窗口。关闭桌面窗口后应用进程退出。
+
+也可以只运行浏览器端：
+
+```bash
+npm --prefix web install
 npm run dev
 ```
 
@@ -28,4 +37,11 @@ npm run dev
 ```bash
 npm run test
 npm run build
+```
+
+Windows 桌面打包：
+
+```bash
+npm --prefix desktop install
+npm run desktop:package:win
 ```
