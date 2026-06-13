@@ -18,6 +18,8 @@ export interface UserSettings {
   theme: ThemeMode;
   enabledIntervalIds: string[];
   intervalDirection: IntervalDirection;
+  earTrainingMinMidi: number;
+  earTrainingMaxMidi: number;
 }
 
 export interface UserProgress {

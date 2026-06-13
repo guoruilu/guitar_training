@@ -1,10 +1,11 @@
+import {
+  DEFAULT_EAR_TRAINING_RANGE,
+  type EarTrainingMidiRange,
+  normalizeEarTrainingRange,
+} from '../../shared/music/midi';
 import { CHORD_QUALITIES, INTERVALS, normalizePitchClass, randomInt, randomItem } from '../../shared/music/theory';
 import type { ChordQuality, IntervalDefinition, PitchClass } from '../../shared/music/types';
 import type { IntervalDirection } from '../../shared/storage/types';
-
-export const EAR_TRAINING_MIN_MIDI = 21; // A0, piano low end.
-export const EAR_TRAINING_MAX_MIDI = 108; // C8, piano high end.
-export const EAR_TRAINING_RANGE_LABEL = 'A0-C8';
 
 export interface IntervalChallenge {
   rootMidi: number;
@@ -31,33 +32,43 @@ export function randomMidiInRange(minInclusive: number, maxInclusive: number): n
 export function intervalRootMidiRange(
   interval: IntervalDefinition,
   direction: Exclude<IntervalDirection, 'both'>,
+  range: EarTrainingMidiRange = DEFAULT_EAR_TRAINING_RANGE,
 ): { min: number; max: number } {
+  const normalizedRange = normalizeEarTrainingRange(range);
   if (direction === 'up') {
     return {
-      min: EAR_TRAINING_MIN_MIDI,
-      max: EAR_TRAINING_MAX_MIDI - interval.semitones,
+      min: normalizedRange.minMidi,
+      max: normalizedRange.maxMidi - interval.semitones,
     };
   }
 
   return {
-    min: EAR_TRAINING_MIN_MIDI + interval.semitones,
-    max: EAR_TRAINING_MAX_MIDI,
+    min: normalizedRange.minMidi + interval.semitones,
+    max: normalizedRange.maxMidi,
   };
 }
 
-export function chordRootMidiRange(quality: ChordQuality): { min: number; max: number } {
+export function chordRootMidiRange(
+  quality: ChordQuality,
+  range: EarTrainingMidiRange = DEFAULT_EAR_TRAINING_RANGE,
+): { min: number; max: number } {
+  const normalizedRange = normalizeEarTrainingRange(range);
   const highestInterval = Math.max(...quality.intervals);
 
   return {
-    min: EAR_TRAINING_MIN_MIDI,
-    max: EAR_TRAINING_MAX_MIDI - highestInterval,
+    min: normalizedRange.minMidi,
+    max: normalizedRange.maxMidi - highestInterval,
   };
 }
 
-export function createIntervalChallenge(direction: IntervalDirection, intervalPool: IntervalDefinition[]): IntervalChallenge {
+export function createIntervalChallenge(
+  direction: IntervalDirection,
+  intervalPool: IntervalDefinition[],
+  range: EarTrainingMidiRange = DEFAULT_EAR_TRAINING_RANGE,
+): IntervalChallenge {
   const interval = randomItem(intervalPool.length > 0 ? intervalPool : INTERVALS);
   const resolvedDirection = direction === 'both' ? randomItem(['up', 'down'] as const) : direction;
-  const rootRange = intervalRootMidiRange(interval, resolvedDirection);
+  const rootRange = intervalRootMidiRange(interval, resolvedDirection, range);
   const rootMidi = randomMidiInRange(rootRange.min, rootRange.max);
 
   return {
@@ -68,9 +79,9 @@ export function createIntervalChallenge(direction: IntervalDirection, intervalPo
   };
 }
 
-export function createChordChallenge(): ChordChallenge {
+export function createChordChallenge(range: EarTrainingMidiRange = DEFAULT_EAR_TRAINING_RANGE): ChordChallenge {
   const quality = randomItem(CHORD_QUALITIES);
-  const rootRange = chordRootMidiRange(quality);
+  const rootRange = chordRootMidiRange(quality, range);
   const rootMidi = randomMidiInRange(rootRange.min, rootRange.max);
 
   return {
@@ -81,6 +92,10 @@ export function createChordChallenge(): ChordChallenge {
   };
 }
 
-export function allMidiNotesInEarTrainingRange(midiNotes: number[]): boolean {
-  return midiNotes.every((midi) => midi >= EAR_TRAINING_MIN_MIDI && midi <= EAR_TRAINING_MAX_MIDI);
+export function allMidiNotesInEarTrainingRange(
+  midiNotes: number[],
+  range: EarTrainingMidiRange = DEFAULT_EAR_TRAINING_RANGE,
+): boolean {
+  const normalizedRange = normalizeEarTrainingRange(range);
+  return midiNotes.every((midi) => midi >= normalizedRange.minMidi && midi <= normalizedRange.maxMidi);
 }

@@ -460,6 +460,17 @@ select {
   gap: 10px;
 }
 
+.range-control-panel {
+  align-items: end;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(180px, 1fr) minmax(130px, 160px) minmax(130px, 160px);
+  padding: 12px;
+}
+
 .interval-toggle-grid {
   display: grid;
   gap: 8px;
@@ -547,6 +558,15 @@ select {
   justify-content: center;
   min-width: 42px;
   padding: 0;
+}
+
+.fret-cell.out-of-range {
+  cursor: not-allowed;
+  opacity: 0.34;
+}
+
+.fret-cell.out-of-range span {
+  color: var(--muted);
 }
 
 .open-string-cell {
@@ -760,6 +780,10 @@ select {
   .prompt-strip {
     align-items: start;
     flex-direction: column;
+  }
+
+  .range-control-panel {
+    grid-template-columns: 1fr;
   }
 
   .stats-grid.compact {

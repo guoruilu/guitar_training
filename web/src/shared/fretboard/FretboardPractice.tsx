@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { playPitchClasses } from '../audio/synth';
-import { evaluateFindAll, evaluateRoute, evaluateSingleNote, makeFretboard, parsePositionKey, positionKey } from '../music/fretboard';
-import { createFretboardChallenge, modeLabel, randomRoot } from '../music/fretboardTrainer';
+import {
+  evaluateFindAllPositions,
+  evaluateRoute,
+  evaluateSingleNote,
+  isPositionInFretRange,
+  makeFretboard,
+  parsePositionKey,
+  positionKey,
+} from '../music/fretboard';
+import { createFretboardChallenge, fretRangeLabel, modeLabel, randomFretRange, randomRoot } from '../music/fretboardTrainer';
 import { NOTE_NAMES_SHARP, noteName, pitchClassesFromIntervals } from '../music/theory';
 import type { FretboardChallenge, FretboardExerciseMode, FretPosition, PitchClass } from '../music/types';
 import type { TrainingArea, TrainingStats, UserSettings } from '../storage/types';
@@ -46,13 +54,37 @@ function buildTitle(root: PitchClass, definition: FretboardDefinition) {
   return `${noteName(root)}${definition.symbol ?? ` ${definition.label}`}`;
 }
 
-function buildChallenge(root: PitchClass, definition: FretboardDefinition, mode: FretboardExerciseMode): FretboardChallenge {
+function formatPosition(position: FretPosition): string {
+  return `${position.stringNumber}弦${position.fret}品 ${noteName(position.pitchClass)}`;
+}
+
+function targetPositionsForChallenge(fretCount: number, challenge: FretboardChallenge): FretPosition[] {
+  return makeFretboard(fretCount).filter(
+    (position) => isPositionInFretRange(position, challenge.fretRange) && challenge.targetPitchClasses.includes(position.pitchClass),
+  );
+}
+
+function buildChallenge(
+  root: PitchClass,
+  definition: FretboardDefinition,
+  mode: FretboardExerciseMode,
+  fretCount: number,
+): FretboardChallenge {
+  const fretRange = randomFretRange(fretCount);
+  const targetPitchClasses = pitchClassesFromIntervals(root, definition.intervals);
+  const rangePositions = makeFretboard(fretCount).filter((position) => isPositionInFretRange(position, fretRange));
+  const focusIndexes = targetPitchClasses
+    .map((pitchClass, index) => (rangePositions.some((position) => position.pitchClass === pitchClass) ? index : undefined))
+    .filter((index): index is number => index !== undefined);
+
   return createFretboardChallenge({
     mode,
     title: buildTitle(root, definition),
     root,
+    fretRange,
     intervals: definition.intervals,
     degrees: definition.degrees,
+    focusIndexes,
   });
 }
 
@@ -69,27 +101,40 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
   const [definitionId, setDefinitionId] = useState(definitions[0].id);
   const [mode, setMode] = useState<FretboardExerciseMode>('find-all');
   const definition = useMemo(() => definitions.find((item) => item.id === definitionId) ?? definitions[0], [definitionId, definitions]);
-  const [challenge, setChallenge] = useState(() => buildChallenge(root, definition, mode));
+  const [challenge, setChallenge] = useState(() => buildChallenge(root, definition, mode, settings.fretCount));
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [result, setResult] = useState<ResultState>({ status: 'idle' });
   const targetPitchClasses = useMemo(() => pitchClassesFromIntervals(root, definition.intervals), [root, definition]);
+  const targetPositionsInRange = useMemo(
+    () => targetPositionsForChallenge(settings.fretCount, challenge),
+    [settings.fretCount, challenge],
+  );
+  const expectedSelectionCount = challenge.mode === 'route'
+    ? challenge.targetPitchClasses.length
+    : challenge.mode === 'single-note'
+      ? 1
+      : targetPositionsInRange.length;
 
   useEffect(() => {
-    setChallenge(buildChallenge(root, definition, mode));
+    setChallenge(buildChallenge(root, definition, mode, settings.fretCount));
     setSelectedKeys([]);
     setResult({ status: 'idle' });
-  }, [root, definition, mode]);
+  }, [root, definition, mode, settings.fretCount]);
 
   function resetChallenge() {
     const nextRoot = randomRoot();
     setRoot(nextRoot);
-    setChallenge(buildChallenge(nextRoot, definition, mode));
+    setChallenge(buildChallenge(nextRoot, definition, mode, settings.fretCount));
     setSelectedKeys([]);
     setResult({ status: 'idle' });
   }
 
   function togglePosition(position: FretPosition) {
     if (result.status === 'answered') {
+      return;
+    }
+
+    if (!isPositionInFretRange(position, challenge.fretRange)) {
       return;
     }
 
@@ -113,7 +158,9 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
   }
 
   function submitAnswer() {
-    const selectedPositions = selectedPositionsFromKeys(selectedKeys, settings.fretCount);
+    const selectedPositions = selectedPositionsFromKeys(selectedKeys, settings.fretCount).filter((position) =>
+      isPositionInFretRange(position, challenge.fretRange),
+    );
     if (selectedPositions.length === 0) {
       setResult({ status: 'pending', message: '需要先选择至少一个位置。' });
       return;
@@ -123,11 +170,11 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
     let message = '';
 
     if (challenge.mode === 'find-all') {
-      const evaluation = evaluateFindAll(selectedPositions, challenge.targetPitchClasses);
+      const evaluation = evaluateFindAllPositions(selectedPositions, targetPositionsInRange);
       correct = evaluation.correct;
       message = correct
         ? '正确。'
-        : `还缺 ${evaluation.missingPitchClasses.map(noteName).join('、') || '无'}；误选 ${evaluation.wrongPositions.map((position) => noteName(position.pitchClass)).join('、') || '无'}。`;
+        : `还缺 ${evaluation.missingPositions.map(formatPosition).join('、') || '无'}；误选 ${evaluation.wrongPositions.map(formatPosition).join('、') || '无'}。`;
     }
 
     if (challenge.mode === 'single-note') {
@@ -146,7 +193,7 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
 
   function promptText() {
     if (challenge.mode === 'find-all') {
-      return `${challenge.title}：覆盖 ${challenge.targetDegrees.join('、')}`;
+      return `${challenge.title}：找出范围内所有 ${challenge.targetDegrees.join('、')}`;
     }
 
     if (challenge.mode === 'single-note') {
@@ -171,8 +218,9 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
 
         <div className="prompt-strip">
           <strong>{promptText()}</strong>
-          <span>{selectedKeys.length} / {challenge.mode === 'route' ? challenge.targetPitchClasses.length : '不限'}</span>
+          <span>{fretRangeLabel(challenge.fretRange)} · {selectedKeys.length} / {expectedSelectionCount}</span>
         </div>
+        <p className="helper-text">本题只在 {fretRangeLabel(challenge.fretRange)} 内作答；范围外位置已禁用。</p>
 
         <Fretboard
           fretCount={settings.fretCount}
@@ -182,6 +230,7 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
           revealed={result.status === 'answered'}
           showNoteNames={settings.showNoteNames}
           showDegrees={settings.showDegrees}
+          isPositionEnabled={(position) => isPositionInFretRange(position, challenge.fretRange)}
           onToggle={togglePosition}
         />
 

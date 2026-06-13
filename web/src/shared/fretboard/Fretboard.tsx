@@ -10,6 +10,7 @@ interface FretboardProps {
   revealed: boolean;
   showNoteNames: boolean;
   showDegrees: boolean;
+  isPositionEnabled?(position: FretPosition): boolean;
   onToggle(position: FretPosition): void;
 }
 
@@ -47,6 +48,7 @@ export function Fretboard({
   revealed,
   showNoteNames,
   showDegrees,
+  isPositionEnabled = () => true,
   onToggle,
 }: FretboardProps) {
   const positions = makeFretboard(fretCount);
@@ -60,16 +62,18 @@ export function Fretboard({
     const key = positionKey(position);
     const isSelected = selected.has(key);
     const isTarget = targetPitchClasses.includes(position.pitchClass);
+    const isEnabled = isPositionEnabled(position);
     const classes = [
       'fret-cell',
       isOpenString ? 'open-string-cell' : '',
       isSelected ? 'selected' : '',
-      revealed && isTarget ? 'target' : '',
-      revealed && isSelected && !isTarget ? 'wrong' : '',
+      !isEnabled ? 'out-of-range' : '',
+      revealed && isEnabled && isTarget ? 'target' : '',
+      revealed && isSelected && (!isEnabled || !isTarget) ? 'wrong' : '',
     ]
       .filter(Boolean)
       .join(' ');
-    const trainingLabel = isSelected || revealed
+    const trainingLabel = isSelected || (revealed && isEnabled)
       ? labelForPosition(position, targetPitchClasses, targetDegrees, showNoteNames, showDegrees)
       : '';
     const visibleLabel = trainingLabel || (isOpenString && showNoteNames ? position.noteName : '');
@@ -80,6 +84,7 @@ export function Fretboard({
         key={key}
         type="button"
         onClick={() => onToggle(position)}
+        disabled={!isEnabled}
         aria-pressed={isSelected}
         aria-label={ariaPositionLabel(position)}
       >

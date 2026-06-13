@@ -1,5 +1,6 @@
 import type { StorageAdapter, TrainingArea, TrainingStats, UserProgress, UserSettings } from './types';
 import { INTERVALS } from '../music/theory';
+import { DEFAULT_EAR_TRAINING_RANGE, normalizeEarTrainingRange } from '../music/midi';
 
 export const STORAGE_KEY = 'guitar-learning-assistant:progress:v1';
 export const EXPORT_FILE_NAME = 'guitar-training-progress.json';
@@ -19,6 +20,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   theme: 'dark',
   enabledIntervalIds: INTERVALS.map((interval) => interval.id),
   intervalDirection: 'both',
+  earTrainingMinMidi: DEFAULT_EAR_TRAINING_RANGE.minMidi,
+  earTrainingMaxMidi: DEFAULT_EAR_TRAINING_RANGE.maxMidi,
 };
 
 export function defaultProgress(): UserProgress {
@@ -82,6 +85,10 @@ export function normalizeProgress(value: unknown): UserProgress {
     ? settings.intervalDirection
     : DEFAULT_SETTINGS.intervalDirection;
   const theme = settings.theme === 'light' ? 'light' : DEFAULT_SETTINGS.theme;
+  const earTrainingRange = normalizeEarTrainingRange({
+    minMidi: Number(settings.earTrainingMinMidi),
+    maxMidi: Number(settings.earTrainingMaxMidi),
+  });
 
   return {
     version: 1,
@@ -95,6 +102,8 @@ export function normalizeProgress(value: unknown): UserProgress {
       theme,
       enabledIntervalIds: enabledIntervalIds.length > 0 ? enabledIntervalIds : DEFAULT_SETTINGS.enabledIntervalIds,
       intervalDirection,
+      earTrainingMinMidi: earTrainingRange.minMidi,
+      earTrainingMaxMidi: earTrainingRange.maxMidi,
     },
     stats: {
       'ear-interval': normalizeStats(stats['ear-interval']),

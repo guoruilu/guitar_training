@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { EAR_TRAINING_MAX_MIDI, EAR_TRAINING_MIN_MIDI, normalizeEarTrainingRange } from '../../shared/music/midi';
 import { CHORD_QUALITIES, INTERVALS } from '../../shared/music/theory';
 import {
   allMidiNotesInEarTrainingRange,
   chordRootMidiRange,
   createChordChallenge,
   createIntervalChallenge,
-  EAR_TRAINING_MAX_MIDI,
-  EAR_TRAINING_MIN_MIDI,
   intervalRootMidiRange,
 } from './challenges';
 
@@ -33,6 +32,29 @@ describe('ear training challenge ranges', () => {
       expect(allMidiNotesInEarTrainingRange([challenge.rootMidi, challenge.secondMidi])).toBe(true);
       expect(Math.abs(challenge.secondMidi - challenge.rootMidi)).toBe(challenge.interval.semitones);
     }
+  });
+
+  it('keeps interval and chord challenges inside a custom user range', () => {
+    const customRange = { minMidi: 40, maxMidi: 64 };
+
+    for (let index = 0; index < 200; index += 1) {
+      const intervalChallenge = createIntervalChallenge('both', INTERVALS, customRange);
+      expect(allMidiNotesInEarTrainingRange([intervalChallenge.rootMidi, intervalChallenge.secondMidi], customRange)).toBe(true);
+
+      const chordChallenge = createChordChallenge(customRange);
+      expect(allMidiNotesInEarTrainingRange(chordChallenge.midiNotes, customRange)).toBe(true);
+    }
+  });
+
+  it('normalizes imported or user-picked ranges to at least one octave', () => {
+    expect(normalizeEarTrainingRange({ minMidi: 20, maxMidi: 200 })).toEqual({
+      minMidi: EAR_TRAINING_MIN_MIDI,
+      maxMidi: EAR_TRAINING_MAX_MIDI,
+    });
+    expect(normalizeEarTrainingRange({ minMidi: 60, maxMidi: 62 })).toEqual({
+      minMidi: 60,
+      maxMidi: 72,
+    });
   });
 
   it('keeps chord challenges inside the ear-training range', () => {

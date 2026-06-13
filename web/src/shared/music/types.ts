@@ -30,6 +30,11 @@ export interface FretPosition {
   noteName: string;
 }
 
+export interface FretboardRange {
+  startFret: number;
+  endFret: number;
+}
+
 export type FretboardExerciseMode = 'find-all' | 'single-note' | 'route';
 
 export interface FretboardChallenge {
@@ -37,6 +42,7 @@ export interface FretboardChallenge {
   mode: FretboardExerciseMode;
   title: string;
   root: PitchClass;
+  fretRange: FretboardRange;
   targetPitchClasses: PitchClass[];
   targetDegrees: string[];
   focusPitchClass?: PitchClass;

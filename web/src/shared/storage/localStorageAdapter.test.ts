@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_EAR_TRAINING_RANGE } from '../music/midi';
 import { defaultProgress, normalizeProgress } from './localStorageAdapter';
 
 describe('local storage progress import', () => {
@@ -19,6 +20,18 @@ describe('local storage progress import', () => {
     expect(normalizeProgress(progress).settings.theme).toBe('light');
     expect(normalizeProgress(progress).settings.enabledIntervalIds).toEqual(['m3', 'P5']);
     expect(normalizeProgress(progress).settings.intervalDirection).toBe('up');
+  });
+
+  it('normalizes missing or invalid ear-training ranges', () => {
+    const progress = defaultProgress();
+    progress.settings.earTrainingMinMidi = 72;
+    progress.settings.earTrainingMaxMidi = 74;
+
+    expect(normalizeProgress(progress).settings.earTrainingMinMidi).toBe(72);
+    expect(normalizeProgress(progress).settings.earTrainingMaxMidi).toBe(84);
+    expect(normalizeProgress({ version: 1, settings: {}, stats: {} }).settings.earTrainingMinMidi).toBe(
+      DEFAULT_EAR_TRAINING_RANGE.minMidi,
+    );
   });
 
   it('falls back to the default interval pool if import has no valid interval ids', () => {

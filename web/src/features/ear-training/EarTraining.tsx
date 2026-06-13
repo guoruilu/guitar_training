@@ -1,9 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { playMidiNotes } from '../../shared/audio/synth';
+import {
+  earTrainingRangeLabel,
+  EAR_TRAINING_MIDI_OPTIONS,
+  type EarTrainingMidiRange,
+  midiNoteLabel,
+  normalizeEarTrainingRange,
+} from '../../shared/music/midi';
 import { CHORD_QUALITIES, INTERVALS, NOTE_NAMES_SHARP, shuffled } from '../../shared/music/theory';
 import type { ChordQuality, IntervalDefinition } from '../../shared/music/types';
 import type { IntervalDirection, TrainingArea, TrainingStats, UserSettings } from '../../shared/storage/types';
-import { createChordChallenge, createIntervalChallenge, EAR_TRAINING_RANGE_LABEL } from './challenges';
+import { createChordChallenge, createIntervalChallenge } from './challenges';
 
 interface EarTrainingProps {
   settings: UserSettings;
@@ -14,6 +21,66 @@ interface EarTrainingProps {
 }
 
 type EarTab = 'interval' | 'chord';
+
+function rangeFromSettings(settings: UserSettings): EarTrainingMidiRange {
+  return normalizeEarTrainingRange({
+    minMidi: settings.earTrainingMinMidi,
+    maxMidi: settings.earTrainingMaxMidi,
+  });
+}
+
+function EarRangeControls({
+  range,
+  onUpdateSettings,
+}: {
+  range: EarTrainingMidiRange;
+  onUpdateSettings(settings: Partial<UserSettings>): void;
+}) {
+  function updateMin(nextMin: number) {
+    const normalized = normalizeEarTrainingRange({ minMidi: nextMin, maxMidi: range.maxMidi });
+    onUpdateSettings({
+      earTrainingMinMidi: normalized.minMidi,
+      earTrainingMaxMidi: normalized.maxMidi,
+    });
+  }
+
+  function updateMax(nextMax: number) {
+    const normalized = normalizeEarTrainingRange({ minMidi: range.minMidi, maxMidi: nextMax });
+    onUpdateSettings({
+      earTrainingMinMidi: normalized.minMidi,
+      earTrainingMaxMidi: normalized.maxMidi,
+    });
+  }
+
+  return (
+    <div className="range-control-panel">
+      <div>
+        <span className="field-label">听力音域</span>
+        <p className="helper-text">当前：{earTrainingRangeLabel(range)}。最低跨度为一个八度。</p>
+      </div>
+      <label>
+        最低音
+        <select value={range.minMidi} onChange={(event) => updateMin(Number(event.target.value))}>
+          {EAR_TRAINING_MIDI_OPTIONS.map((midi) => (
+            <option value={midi} key={midi}>
+              {midiNoteLabel(midi)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        最高音
+        <select value={range.maxMidi} onChange={(event) => updateMax(Number(event.target.value))}>
+          {EAR_TRAINING_MIDI_OPTIONS.map((midi) => (
+            <option value={midi} key={midi}>
+              {midiNoteLabel(midi)}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
+  );
+}
 
 function accuracy(stats: TrainingStats) {
   if (stats.attempts === 0) {
@@ -50,21 +117,23 @@ function IntervalTrainer({
     [settings.enabledIntervalIds],
   );
   const intervalPoolKey = settings.enabledIntervalIds.join('|');
-  const [challenge, setChallenge] = useState(() => createIntervalChallenge(settings.intervalDirection, intervalPool));
+  const earRange = rangeFromSettings(settings);
+  const rangeKey = `${earRange.minMidi}:${earRange.maxMidi}`;
+  const [challenge, setChallenge] = useState(() => createIntervalChallenge(settings.intervalDirection, intervalPool, earRange));
   const [answered, setAnswered] = useState<string | null>(null);
 
   useEffect(() => {
-    const nextChallenge = createIntervalChallenge(settings.intervalDirection, intervalPool);
+    const nextChallenge = createIntervalChallenge(settings.intervalDirection, intervalPool, earRange);
     setChallenge(nextChallenge);
     setAnswered(null);
-  }, [settings.intervalDirection, intervalPoolKey]);
+  }, [settings.intervalDirection, intervalPoolKey, rangeKey]);
 
   async function play(challengeToPlay = challenge) {
     await playMidiNotes([challengeToPlay.rootMidi, challengeToPlay.secondMidi], { stagger: 0.75, duration: 0.72 });
   }
 
   async function next() {
-    const nextChallenge = createIntervalChallenge(settings.intervalDirection, intervalPool);
+    const nextChallenge = createIntervalChallenge(settings.intervalDirection, intervalPool, earRange);
     setChallenge(nextChallenge);
     setAnswered(null);
     await play(nextChallenge);
@@ -118,7 +187,7 @@ function IntervalTrainer({
         <strong>{challenge.direction === 'up' ? '上行' : '下行'}音程</strong>
         <span>{answered ? `答案：${challenge.interval.label}` : '待作答'}</span>
       </div>
-      <p className="helper-text">听力音域：{EAR_TRAINING_RANGE_LABEL}，覆盖贝斯、低音提琴、吉他和钢琴常用范围。</p>
+      <p className="helper-text">本题音域：{earTrainingRangeLabel(earRange)}。</p>
 
       <label className="inline-field">
         方向
@@ -183,17 +252,33 @@ function IntervalTrainer({
   );
 }
 
-function ChordTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onRecordAttempt(area: TrainingArea, correct: boolean): void }) {
-  const [challenge, setChallenge] = useState(() => createChordChallenge());
+function ChordTrainer({
+  settings,
+  stats,
+  onRecordAttempt,
+}: {
+  settings: UserSettings;
+  stats: TrainingStats;
+  onRecordAttempt(area: TrainingArea, correct: boolean): void;
+}) {
+  const earRange = rangeFromSettings(settings);
+  const rangeKey = `${earRange.minMidi}:${earRange.maxMidi}`;
+  const [challenge, setChallenge] = useState(() => createChordChallenge(earRange));
   const [answered, setAnswered] = useState<string | null>(null);
   const answers = useMemo(() => shuffled(CHORD_QUALITIES), [challenge]);
+
+  useEffect(() => {
+    const nextChallenge = createChordChallenge(earRange);
+    setChallenge(nextChallenge);
+    setAnswered(null);
+  }, [rangeKey]);
 
   async function play(challengeToPlay = challenge) {
     await playMidiNotes(challengeToPlay.midiNotes, { duration: 1.15, stagger: 0 });
   }
 
   async function next() {
-    const nextChallenge = createChordChallenge();
+    const nextChallenge = createChordChallenge(earRange);
     setChallenge(nextChallenge);
     setAnswered(null);
     await play(nextChallenge);
@@ -230,7 +315,7 @@ function ChordTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onReco
         <strong>识别和弦性质</strong>
         <span>{answered ? `答案：${NOTE_NAMES_SHARP[challenge.root]}${challenge.quality.symbol}` : '待作答'}</span>
       </div>
-      <p className="helper-text">听力音域：{EAR_TRAINING_RANGE_LABEL}，所有和弦音都会保持在此范围内。</p>
+      <p className="helper-text">本题音域：{earTrainingRangeLabel(earRange)}，所有和弦音都会保持在此范围内。</p>
 
       <div className="choice-grid chords">
         {answers.map((quality) => {
@@ -258,6 +343,7 @@ function ChordTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onReco
 
 export function EarTraining({ settings, intervalStats, chordStats, onUpdateSettings, onRecordAttempt }: EarTrainingProps) {
   const [tab, setTab] = useState<EarTab>('interval');
+  const earRange = rangeFromSettings(settings);
 
   return (
     <section className="training-layout single-column" aria-labelledby="ear-training-title">
@@ -276,6 +362,8 @@ export function EarTraining({ settings, intervalStats, chordStats, onUpdateSetti
         </div>
       </div>
 
+      <EarRangeControls range={earRange} onUpdateSettings={onUpdateSettings} />
+
       {tab === 'interval' ? (
         <IntervalTrainer
           settings={settings}
@@ -284,7 +372,7 @@ export function EarTraining({ settings, intervalStats, chordStats, onUpdateSetti
           onRecordAttempt={onRecordAttempt}
         />
       ) : (
-        <ChordTrainer stats={chordStats} onRecordAttempt={onRecordAttempt} />
+        <ChordTrainer settings={settings} stats={chordStats} onRecordAttempt={onRecordAttempt} />
       )}
     </section>
   );
