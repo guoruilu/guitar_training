@@ -14,6 +14,10 @@ export function midiToFrequency(midi: number): number {
   return 440 * 2 ** ((midi - 69) / 12);
 }
 
+export function filterCutoffForMidi(midi: number): number {
+  return Math.min(12000, Math.max(2200, midiToFrequency(midi) * 2.5));
+}
+
 export function pitchClassToMidi(pitchClass: PitchClass, octave = 4): number {
   const base = 12 * (octave + 1);
   return base + pitchClass;
@@ -47,7 +51,7 @@ export async function playMidiNotes(midiNotes: number[], options: { duration?: n
     oscillator.type = 'triangle';
     oscillator.frequency.setValueAtTime(midiToFrequency(midi), start);
     filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(2200, start);
+    filter.frequency.setValueAtTime(filterCutoffForMidi(midi), start);
 
     oscillator.connect(filter);
     filter.connect(envelope);

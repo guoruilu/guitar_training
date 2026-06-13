@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { buildChordMidiNotes, playMidiNotes } from '../../shared/audio/synth';
-import { CHORD_QUALITIES, INTERVALS, NOTE_NAMES_SHARP, randomInt, randomItem, shuffled } from '../../shared/music/theory';
-import type { ChordQuality, IntervalDefinition, PitchClass } from '../../shared/music/types';
+import { playMidiNotes } from '../../shared/audio/synth';
+import { CHORD_QUALITIES, INTERVALS, NOTE_NAMES_SHARP, shuffled } from '../../shared/music/theory';
+import type { ChordQuality, IntervalDefinition } from '../../shared/music/types';
 import type { IntervalDirection, TrainingArea, TrainingStats, UserSettings } from '../../shared/storage/types';
+import { createChordChallenge, createIntervalChallenge, EAR_TRAINING_RANGE_LABEL } from './challenges';
 
 interface EarTrainingProps {
   settings: UserSettings;
@@ -13,43 +14,6 @@ interface EarTrainingProps {
 }
 
 type EarTab = 'interval' | 'chord';
-
-interface IntervalChallenge {
-  rootMidi: number;
-  secondMidi: number;
-  interval: IntervalDefinition;
-  direction: Exclude<IntervalDirection, 'both'>;
-}
-
-interface ChordChallenge {
-  root: PitchClass;
-  quality: ChordQuality;
-  midiNotes: number[];
-}
-
-function createIntervalChallenge(direction: IntervalDirection, intervalPool: IntervalDefinition[]): IntervalChallenge {
-  const interval = randomItem(intervalPool.length > 0 ? intervalPool : INTERVALS);
-  const resolvedDirection = direction === 'both' ? randomItem(['up', 'down'] as const) : direction;
-  const rootMidi = resolvedDirection === 'up' ? 54 + randomInt(12) : 66 + randomInt(12);
-
-  return {
-    rootMidi,
-    secondMidi: resolvedDirection === 'up' ? rootMidi + interval.semitones : rootMidi - interval.semitones,
-    interval,
-    direction: resolvedDirection,
-  };
-}
-
-function createChordChallenge(): ChordChallenge {
-  const root = randomInt(12) as PitchClass;
-  const quality = randomItem(CHORD_QUALITIES);
-
-  return {
-    root,
-    quality,
-    midiNotes: buildChordMidiNotes(root, quality.intervals, 4),
-  };
-}
 
 function accuracy(stats: TrainingStats) {
   if (stats.attempts === 0) {
@@ -154,6 +118,7 @@ function IntervalTrainer({
         <strong>{challenge.direction === 'up' ? '上行' : '下行'}音程</strong>
         <span>{answered ? `答案：${challenge.interval.label}` : '待作答'}</span>
       </div>
+      <p className="helper-text">听力音域：{EAR_TRAINING_RANGE_LABEL}，覆盖贝斯、低音提琴、吉他和钢琴常用范围。</p>
 
       <label className="inline-field">
         方向
@@ -265,6 +230,7 @@ function ChordTrainer({ stats, onRecordAttempt }: { stats: TrainingStats; onReco
         <strong>识别和弦性质</strong>
         <span>{answered ? `答案：${NOTE_NAMES_SHARP[challenge.root]}${challenge.quality.symbol}` : '待作答'}</span>
       </div>
+      <p className="helper-text">听力音域：{EAR_TRAINING_RANGE_LABEL}，所有和弦音都会保持在此范围内。</p>
 
       <div className="choice-grid chords">
         {answers.map((quality) => {
