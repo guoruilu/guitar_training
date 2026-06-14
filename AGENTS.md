@@ -49,3 +49,4 @@ This project is guided by human-written requirements and docs, with code generat
 - After every task, update `docs/` and `log/` with enough context, decisions, errors, and next steps for a new agent to resume quickly.
 - Keep the app self-contained from source: no required untracked assets or manually fetched audio/files. Build or prewarm steps are acceptable only when project commands can reproduce everything.
 - Keep changes scoped, avoid rewriting unrelated files, then commit and push to `origin/main` unless the user says not to.
+- Update .exe file after every code update
