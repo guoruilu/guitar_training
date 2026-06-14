@@ -230,6 +230,8 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
           revealed={result.status === 'answered'}
           showNoteNames={settings.showNoteNames}
           showDegrees={settings.showDegrees}
+          viewMode={settings.fretboardViewMode}
+          stringOrder={settings.fretboardStringOrder}
           isPositionEnabled={(position) => isPositionInFretRange(position, challenge.fretRange)}
           onToggle={togglePosition}
         />

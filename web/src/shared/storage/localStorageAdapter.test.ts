@@ -22,6 +22,16 @@ describe('local storage progress import', () => {
     expect(normalizeProgress(progress).settings.intervalDirection).toBe('up');
   });
 
+  it('normalizes fretboard display settings', () => {
+    const progress = defaultProgress();
+    progress.settings.fretboardViewMode = 'player';
+    progress.settings.fretboardStringOrder = 'first-string-top';
+
+    expect(normalizeProgress(progress).settings.fretboardViewMode).toBe('player');
+    expect(normalizeProgress(progress).settings.fretboardStringOrder).toBe('first-string-top');
+    expect(normalizeProgress({ version: 1, settings: {}, stats: {} }).settings.fretboardViewMode).toBe('diagram');
+  });
+
   it('normalizes missing or invalid ear-training ranges', () => {
     const progress = defaultProgress();
     progress.settings.earTrainingMinMidi = 72;

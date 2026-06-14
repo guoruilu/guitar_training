@@ -1,6 +1,7 @@
 import type { FretPosition, PitchClass } from '../music/types';
 import { makeFretboard, positionKey } from '../music/fretboard';
 import { noteName } from '../music/theory';
+import type { FretboardStringOrder, FretboardViewMode } from '../storage/types';
 
 interface FretboardProps {
   fretCount: number;
@@ -10,6 +11,8 @@ interface FretboardProps {
   revealed: boolean;
   showNoteNames: boolean;
   showDegrees: boolean;
+  viewMode: FretboardViewMode;
+  stringOrder: FretboardStringOrder;
   isPositionEnabled?(position: FretPosition): boolean;
   onToggle(position: FretPosition): void;
 }
@@ -40,6 +43,22 @@ function ariaPositionLabel(position: FretPosition): string {
   return `${position.stringNumber}弦 ${fretLabel} ${noteName(position.pitchClass)}`;
 }
 
+export function orderStringGroups(
+  positions: FretPosition[],
+  stringOrder: FretboardStringOrder,
+): FretPosition[][] {
+  const groups = Array.from({ length: 6 }, (_, stringIndex) =>
+    positions.filter((position) => position.stringIndex === stringIndex),
+  );
+
+  return stringOrder === 'first-string-top' ? [...groups].reverse() : groups;
+}
+
+export function orderFrettedPositions(positions: FretPosition[], viewMode: FretboardViewMode): FretPosition[] {
+  const fretted = positions.filter((position) => position.fret > 0);
+  return viewMode === 'player' ? [...fretted].reverse() : fretted;
+}
+
 export function Fretboard({
   fretCount,
   selectedKeys,
@@ -48,15 +67,19 @@ export function Fretboard({
   revealed,
   showNoteNames,
   showDegrees,
+  viewMode,
+  stringOrder,
   isPositionEnabled = () => true,
   onToggle,
 }: FretboardProps) {
   const positions = makeFretboard(fretCount);
   const selected = new Set(selectedKeys);
-  const strings = Array.from({ length: 6 }, (_, stringIndex) =>
-    positions.filter((position) => position.stringIndex === stringIndex),
-  );
-  const gridTemplateColumns = `48px 62px repeat(${fretCount}, minmax(42px, 1fr))`;
+  const strings = orderStringGroups(positions, stringOrder);
+  const fretNumbers = Array.from({ length: fretCount }, (_, index) => index + 1);
+  const visibleFretNumbers = viewMode === 'player' ? [...fretNumbers].reverse() : fretNumbers;
+  const gridTemplateColumns = viewMode === 'player'
+    ? `48px repeat(${fretCount}, minmax(42px, 1fr)) 62px`
+    : `48px 62px repeat(${fretCount}, minmax(42px, 1fr))`;
 
   function renderPositionButton(position: FretPosition, isOpenString = false) {
     const key = positionKey(position);
@@ -94,18 +117,19 @@ export function Fretboard({
   }
 
   return (
-    <div className="fretboard-shell" aria-label="吉他指板">
+    <div className={`fretboard-shell ${viewMode === 'player' ? 'player-view' : 'diagram-view'}`} aria-label="吉他指板">
       <div className="fret-number-row" style={{ gridTemplateColumns }}>
         <span />
-        <span className="open-string-heading">空弦</span>
-        {Array.from({ length: fretCount }, (_, index) => (
-          <span key={index + 1}>{index + 1}</span>
+        {viewMode === 'diagram' && <span className="open-string-heading">空弦</span>}
+        {visibleFretNumbers.map((fret) => (
+          <span key={fret}>{fret}</span>
         ))}
+        {viewMode === 'player' && <span className="open-string-heading">空弦</span>}
       </div>
 
       {strings.map((stringPositions) => {
         const openPosition = stringPositions.find((position) => position.fret === 0);
-        const frettedPositions = stringPositions.filter((position) => position.fret > 0);
+        const frettedPositions = orderFrettedPositions(stringPositions, viewMode);
 
         return (
           <div
@@ -114,8 +138,9 @@ export function Fretboard({
             style={{ gridTemplateColumns }}
           >
             <span className="string-name">{stringPositions[0].stringNumber}弦</span>
-            {openPosition && renderPositionButton(openPosition, true)}
+            {viewMode === 'diagram' && openPosition && renderPositionButton(openPosition, true)}
             {frettedPositions.map((position) => renderPositionButton(position))}
+            {viewMode === 'player' && openPosition && renderPositionButton(openPosition, true)}
           </div>
         );
       })}

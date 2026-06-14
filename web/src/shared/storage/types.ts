@@ -1,6 +1,8 @@
 export type TrainingArea = 'ear-interval' | 'ear-chord' | 'arpeggio' | 'scale';
 export type ThemeMode = 'dark' | 'light';
 export type IntervalDirection = 'both' | 'up' | 'down';
+export type FretboardViewMode = 'diagram' | 'player';
+export type FretboardStringOrder = 'first-string-top' | 'first-string-bottom';
 
 export interface TrainingStats {
   attempts: number;
@@ -14,6 +16,8 @@ export interface UserSettings {
   fretCount: number;
   showDegrees: boolean;
   showNoteNames: boolean;
+  fretboardViewMode: FretboardViewMode;
+  fretboardStringOrder: FretboardStringOrder;
   preferredSynth: 'clean';
   theme: ThemeMode;
   enabledIntervalIds: string[];

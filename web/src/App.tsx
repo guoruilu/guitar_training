@@ -134,6 +134,26 @@ export function App() {
                 <option value={17}>空弦 + 1-17</option>
               </select>
             </label>
+            <label>
+              视角
+              <select
+                value={progress.settings.fretboardViewMode}
+                onChange={(event) => updateSettings({ fretboardViewMode: event.target.value as UserSettings['fretboardViewMode'] })}
+              >
+                <option value="diagram">图表视角</option>
+                <option value="player">第一人称演奏视角</option>
+              </select>
+            </label>
+            <label>
+              琴弦顺序
+              <select
+                value={progress.settings.fretboardStringOrder}
+                onChange={(event) => updateSettings({ fretboardStringOrder: event.target.value as UserSettings['fretboardStringOrder'] })}
+              >
+                <option value="first-string-bottom">1弦在下</option>
+                <option value="first-string-top">1弦在上</option>
+              </select>
+            </label>
             <label className="checkbox-row">
               <input
                 type="checkbox"
@@ -248,7 +268,7 @@ export function App() {
               </section>
               <section>
                 <h3>指板训练</h3>
-                <p>琶音和音阶页支持点选找音、逐题定位和路线练习。空弦在独立列中选择。</p>
+                <p>琶音和音阶页支持点选找音、逐题定位和路线练习。可切换指板视角和琴弦顺序。</p>
               </section>
               <section>
                 <h3>数据迁移</h3>

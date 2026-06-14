@@ -16,6 +16,8 @@ export const DEFAULT_SETTINGS: UserSettings = {
   fretCount: 12,
   showDegrees: true,
   showNoteNames: true,
+  fretboardViewMode: 'diagram',
+  fretboardStringOrder: 'first-string-bottom',
   preferredSynth: 'clean',
   theme: 'dark',
   enabledIntervalIds: INTERVALS.map((interval) => interval.id),
@@ -85,6 +87,10 @@ export function normalizeProgress(value: unknown): UserProgress {
     ? settings.intervalDirection
     : DEFAULT_SETTINGS.intervalDirection;
   const theme = settings.theme === 'light' ? 'light' : DEFAULT_SETTINGS.theme;
+  const fretboardViewMode = settings.fretboardViewMode === 'player' ? 'player' : DEFAULT_SETTINGS.fretboardViewMode;
+  const fretboardStringOrder = settings.fretboardStringOrder === 'first-string-top'
+    ? 'first-string-top'
+    : DEFAULT_SETTINGS.fretboardStringOrder;
   const earTrainingRange = normalizeEarTrainingRange({
     minMidi: Number(settings.earTrainingMinMidi),
     maxMidi: Number(settings.earTrainingMaxMidi),
@@ -98,6 +104,8 @@ export function normalizeProgress(value: unknown): UserProgress {
       fretCount: [12, 15, 17].includes(Number(settings.fretCount)) ? Number(settings.fretCount) : DEFAULT_SETTINGS.fretCount,
       showDegrees: typeof settings.showDegrees === 'boolean' ? settings.showDegrees : DEFAULT_SETTINGS.showDegrees,
       showNoteNames: typeof settings.showNoteNames === 'boolean' ? settings.showNoteNames : DEFAULT_SETTINGS.showNoteNames,
+      fretboardViewMode,
+      fretboardStringOrder,
       preferredSynth: 'clean',
       theme,
       enabledIntervalIds: enabledIntervalIds.length > 0 ? enabledIntervalIds : DEFAULT_SETTINGS.enabledIntervalIds,
