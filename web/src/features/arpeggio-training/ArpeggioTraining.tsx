@@ -5,10 +5,11 @@ import type { TrainingArea, TrainingStats, UserSettings } from '../../shared/sto
 interface ArpeggioTrainingProps {
   settings: UserSettings;
   stats: TrainingStats;
+  onUpdateSettings(settings: Partial<UserSettings>): void;
   onRecordAttempt(area: TrainingArea, correct: boolean): void;
 }
 
-export function ArpeggioTraining({ settings, stats, onRecordAttempt }: ArpeggioTrainingProps) {
+export function ArpeggioTraining({ settings, stats, onUpdateSettings, onRecordAttempt }: ArpeggioTrainingProps) {
   return (
     <FretboardPractice
       area="arpeggio"
@@ -16,6 +17,7 @@ export function ArpeggioTraining({ settings, stats, onRecordAttempt }: ArpeggioT
       definitions={CHORD_QUALITIES}
       settings={settings}
       stats={stats}
+      onUpdateSettings={onUpdateSettings}
       onRecordAttempt={onRecordAttempt}
     />
   );

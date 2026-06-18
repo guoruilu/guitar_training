@@ -25,11 +25,24 @@ describe('local storage progress import', () => {
   it('normalizes fretboard display settings', () => {
     const progress = defaultProgress();
     progress.settings.fretboardViewMode = 'player';
-    progress.settings.fretboardStringOrder = 'first-string-top';
+    progress.settings.fretboardStringOrder = 'first-string-bottom';
 
     expect(normalizeProgress(progress).settings.fretboardViewMode).toBe('player');
-    expect(normalizeProgress(progress).settings.fretboardStringOrder).toBe('first-string-top');
+    expect(normalizeProgress(progress).settings.fretboardStringOrder).toBe('first-string-bottom');
     expect(normalizeProgress({ version: 1, settings: {}, stats: {} }).settings.fretboardViewMode).toBe('diagram');
+    expect(normalizeProgress({ version: 1, settings: {}, stats: {} }).settings.fretboardStringOrder).toBe('first-string-top');
+  });
+
+  it('normalizes fretboard random mode settings', () => {
+    const progress = defaultProgress();
+    progress.settings.enabledFretboardRootIds = ['C', 'Gb'];
+    progress.settings.arpeggioQuestionMode = 'random';
+    progress.settings.scaleQuestionMode = 'random';
+
+    expect(normalizeProgress(progress).settings.enabledFretboardRootIds).toEqual(['C', 'Gb']);
+    expect(normalizeProgress(progress).settings.arpeggioQuestionMode).toBe('random');
+    expect(normalizeProgress(progress).settings.scaleQuestionMode).toBe('random');
+    expect(normalizeProgress({ version: 1, settings: { enabledFretboardRootIds: [] }, stats: {} }).settings.enabledFretboardRootIds.length).toBeGreaterThan(12);
   });
 
   it('normalizes missing or invalid ear-training ranges', () => {

@@ -39,6 +39,13 @@ npm run test
 npm run build
 ```
 
+3D 指板变更后，可先启动预览服务，再运行 Playwright 检查：
+
+```bash
+npm --prefix web run preview -- --port 5181 --strictPort
+node web/scripts/verify-3d-playwright.mjs
+```
+
 Windows 桌面打包：
 
 ```bash

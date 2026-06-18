@@ -1,6 +1,7 @@
 import type { StorageAdapter, TrainingArea, TrainingStats, UserProgress, UserSettings } from './types';
 import { INTERVALS } from '../music/theory';
 import { DEFAULT_EAR_TRAINING_RANGE, normalizeEarTrainingRange } from '../music/midi';
+import { DEFAULT_FRETBOARD_ROOT_IDS, normalizeRootIds } from '../music/spelling';
 
 export const STORAGE_KEY = 'guitar-learning-assistant:progress:v1';
 export const EXPORT_FILE_NAME = 'guitar-training-progress.json';
@@ -17,13 +18,16 @@ export const DEFAULT_SETTINGS: UserSettings = {
   showDegrees: true,
   showNoteNames: true,
   fretboardViewMode: 'diagram',
-  fretboardStringOrder: 'first-string-bottom',
+  fretboardStringOrder: 'first-string-top',
   preferredSynth: 'clean',
   theme: 'dark',
   enabledIntervalIds: INTERVALS.map((interval) => interval.id),
   intervalDirection: 'both',
   earTrainingMinMidi: DEFAULT_EAR_TRAINING_RANGE.minMidi,
   earTrainingMaxMidi: DEFAULT_EAR_TRAINING_RANGE.maxMidi,
+  enabledFretboardRootIds: [...DEFAULT_FRETBOARD_ROOT_IDS],
+  arpeggioQuestionMode: 'manual',
+  scaleQuestionMode: 'manual',
 };
 
 export function defaultProgress(): UserProgress {
@@ -88,9 +92,12 @@ export function normalizeProgress(value: unknown): UserProgress {
     : DEFAULT_SETTINGS.intervalDirection;
   const theme = settings.theme === 'light' ? 'light' : DEFAULT_SETTINGS.theme;
   const fretboardViewMode = settings.fretboardViewMode === 'player' ? 'player' : DEFAULT_SETTINGS.fretboardViewMode;
-  const fretboardStringOrder = settings.fretboardStringOrder === 'first-string-top'
-    ? 'first-string-top'
+  const fretboardStringOrder = settings.fretboardStringOrder === 'first-string-bottom'
+    ? 'first-string-bottom'
     : DEFAULT_SETTINGS.fretboardStringOrder;
+  const enabledFretboardRootIds = normalizeRootIds(settings.enabledFretboardRootIds);
+  const arpeggioQuestionMode = settings.arpeggioQuestionMode === 'random' ? 'random' : DEFAULT_SETTINGS.arpeggioQuestionMode;
+  const scaleQuestionMode = settings.scaleQuestionMode === 'random' ? 'random' : DEFAULT_SETTINGS.scaleQuestionMode;
   const earTrainingRange = normalizeEarTrainingRange({
     minMidi: Number(settings.earTrainingMinMidi),
     maxMidi: Number(settings.earTrainingMaxMidi),
@@ -112,6 +119,9 @@ export function normalizeProgress(value: unknown): UserProgress {
       intervalDirection,
       earTrainingMinMidi: earTrainingRange.minMidi,
       earTrainingMaxMidi: earTrainingRange.maxMidi,
+      enabledFretboardRootIds,
+      arpeggioQuestionMode,
+      scaleQuestionMode,
     },
     stats: {
       'ear-interval': normalizeStats(stats['ear-interval']),

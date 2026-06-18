@@ -33,12 +33,15 @@ export function createFretboardChallenge(input: {
   mode: FretboardExerciseMode;
   title: string;
   root: PitchClass;
+  rootName: string;
   fretRange: FretboardRange;
   intervals: number[];
   degrees: string[];
+  noteLabels: string[];
   focusIndexes?: number[];
 }): FretboardChallenge {
   const targetPitchClasses = input.intervals.map((interval) => transpose(input.root, interval));
+  const targetNoteLabels = targetPitchClasses.map((_, index) => input.noteLabels[index] ?? input.degrees[index] ?? '');
   const defaultFocusIndexes = targetPitchClasses.map((_, index) => index);
   const focusIndexes = input.focusIndexes?.length ? input.focusIndexes : defaultFocusIndexes;
   const focusIndex = input.mode === 'single-note' ? randomItem(focusIndexes) : undefined;
@@ -48,11 +51,14 @@ export function createFretboardChallenge(input: {
     mode: input.mode,
     title: input.title,
     root: input.root,
+    rootName: input.rootName,
     fretRange: input.fretRange,
     targetPitchClasses,
     targetDegrees: input.degrees,
+    targetNoteLabels,
     focusPitchClass: focusIndex === undefined ? undefined : targetPitchClasses[focusIndex],
     focusDegree: focusIndex === undefined ? undefined : input.degrees[focusIndex],
+    focusNoteLabel: focusIndex === undefined ? undefined : targetNoteLabels[focusIndex],
   };
 }
 

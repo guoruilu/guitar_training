@@ -42,9 +42,12 @@ export interface FretboardChallenge {
   mode: FretboardExerciseMode;
   title: string;
   root: PitchClass;
+  rootName: string;
   fretRange: FretboardRange;
   targetPitchClasses: PitchClass[];
   targetDegrees: string[];
+  targetNoteLabels: string[];
   focusPitchClass?: PitchClass;
   focusDegree?: string;
+  focusNoteLabel?: string;
 }

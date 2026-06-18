@@ -1,0 +1,59 @@
+{
+  "baseUrl": "http://127.0.0.1:5181/",
+  "results": [
+    {
+      "name": "desktop-3d-fretboard",
+      "viewport": {
+        "width": 1365,
+        "height": 900
+      },
+      "screenshotPath": "/mnt/e/wps/projects/guitar/log/playwright-2026-06-18/desktop-3d-fretboard.png",
+      "draggedScreenshotPath": "/mnt/e/wps/projects/guitar/log/playwright-2026-06-18/desktop-3d-fretboard-dragged.png",
+      "defaultStats": {
+        "width": 735,
+        "height": 520,
+        "samplePixels": 76800,
+        "nonBlank": 76800,
+        "colored": 20914,
+        "nonBlankRatio": 1,
+        "coloredRatio": 0.27231770833333335
+      },
+      "draggedStats": {
+        "width": 735,
+        "height": 520,
+        "samplePixels": 76800,
+        "nonBlank": 76795,
+        "colored": 20607,
+        "nonBlankRatio": 0.9999348958333333,
+        "coloredRatio": 0.2683203125
+      }
+    },
+    {
+      "name": "mobile-3d-fretboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "screenshotPath": "/mnt/e/wps/projects/guitar/log/playwright-2026-06-18/mobile-3d-fretboard.png",
+      "draggedScreenshotPath": "/mnt/e/wps/projects/guitar/log/playwright-2026-06-18/mobile-3d-fretboard-dragged.png",
+      "defaultStats": {
+        "width": 360,
+        "height": 420,
+        "samplePixels": 76800,
+        "nonBlank": 76800,
+        "colored": 19237,
+        "nonBlankRatio": 1,
+        "coloredRatio": 0.25048177083333334
+      },
+      "draggedStats": {
+        "width": 360,
+        "height": 420,
+        "samplePixels": 76800,
+        "nonBlank": 76800,
+        "colored": 19237,
+        "nonBlankRatio": 1,
+        "coloredRatio": 0.25048177083333334
+      }
+    }
+  ]
+}

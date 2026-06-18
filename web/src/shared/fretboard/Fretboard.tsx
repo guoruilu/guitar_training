@@ -8,6 +8,7 @@ interface FretboardProps {
   selectedKeys: string[];
   targetPitchClasses: PitchClass[];
   targetDegrees: string[];
+  targetNoteLabels: string[];
   revealed: boolean;
   showNoteNames: boolean;
   showDegrees: boolean;
@@ -21,6 +22,7 @@ function labelForPosition(
   position: FretPosition,
   targetPitchClasses: PitchClass[],
   targetDegrees: string[],
+  targetNoteLabels: string[],
   showNoteNames: boolean,
   showDegrees: boolean,
 ) {
@@ -28,7 +30,7 @@ function labelForPosition(
   const labels: string[] = [];
 
   if (showNoteNames) {
-    labels.push(noteName(position.pitchClass));
+    labels.push(targetIndex >= 0 ? targetNoteLabels[targetIndex] : noteName(position.pitchClass));
   }
 
   if (showDegrees && targetIndex >= 0) {
@@ -64,6 +66,7 @@ export function Fretboard({
   selectedKeys,
   targetPitchClasses,
   targetDegrees,
+  targetNoteLabels,
   revealed,
   showNoteNames,
   showDegrees,
@@ -97,7 +100,7 @@ export function Fretboard({
       .filter(Boolean)
       .join(' ');
     const trainingLabel = isSelected || (revealed && isEnabled)
-      ? labelForPosition(position, targetPitchClasses, targetDegrees, showNoteNames, showDegrees)
+      ? labelForPosition(position, targetPitchClasses, targetDegrees, targetNoteLabels, showNoteNames, showDegrees)
       : '';
     const visibleLabel = trainingLabel || (isOpenString && showNoteNames ? position.noteName : '');
 

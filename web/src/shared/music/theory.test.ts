@@ -67,15 +67,18 @@ describe('music theory helpers', () => {
       mode: 'single-note',
       title: 'Cmaj',
       root: 0,
+      rootName: 'C',
       fretRange: { startFret: 5, endFret: 8 },
       intervals: [0, 4, 7],
       degrees: ['R', '3', '5'],
+      noteLabels: ['C', 'E', 'G'],
       focusIndexes: [1],
     });
 
     expect(challenge.fretRange).toEqual({ startFret: 5, endFret: 8 });
     expect(challenge.focusPitchClass).toBe(4);
     expect(challenge.focusDegree).toBe('3');
+    expect(challenge.focusNoteLabel).toBe('E');
   });
 
   it('keeps random helpers inside valid ranges', () => {

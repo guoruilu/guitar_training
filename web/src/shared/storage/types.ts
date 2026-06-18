@@ -3,6 +3,7 @@ export type ThemeMode = 'dark' | 'light';
 export type IntervalDirection = 'both' | 'up' | 'down';
 export type FretboardViewMode = 'diagram' | 'player';
 export type FretboardStringOrder = 'first-string-top' | 'first-string-bottom';
+export type FretboardQuestionMode = 'manual' | 'random';
 
 export interface TrainingStats {
   attempts: number;
@@ -24,6 +25,9 @@ export interface UserSettings {
   intervalDirection: IntervalDirection;
   earTrainingMinMidi: number;
   earTrainingMaxMidi: number;
+  enabledFretboardRootIds: string[];
+  arpeggioQuestionMode: FretboardQuestionMode;
+  scaleQuestionMode: FretboardQuestionMode;
 }
 
 export interface UserProgress {

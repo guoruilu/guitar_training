@@ -289,6 +289,11 @@ select {
   padding: 0 12px;
 }
 
+select:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
 .checkbox-row {
   align-items: center;
   display: flex;
@@ -392,6 +397,11 @@ select {
 .prompt-strip span {
   color: var(--prompt-muted);
   white-space: nowrap;
+}
+
+.prompt-strip strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .control-panel {
@@ -633,6 +643,23 @@ select {
   color: #ffffff;
 }
 
+.fretboard-3d-shell {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  min-height: 520px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fretboard-3d-canvas,
+.fretboard-3d-canvas canvas {
+  display: block;
+  height: 100%;
+  min-height: 520px;
+  width: 100%;
+}
+
 .feedback {
   background: var(--warning-bg);
   border: 1px solid var(--warning-border);
@@ -751,6 +778,32 @@ select {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.root-toggle-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.root-toggle {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  display: flex;
+  font-size: 13px;
+  gap: 6px;
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px;
+}
+
+.root-toggle input {
+  height: 14px;
+  margin: 0;
+  width: 14px;
+}
+
 @media (max-width: 1120px) {
   .workspace,
   .training-layout {
@@ -797,5 +850,11 @@ select {
 
   .help-grid {
     grid-template-columns: 1fr;
+  }
+
+  .fretboard-3d-shell,
+  .fretboard-3d-canvas,
+  .fretboard-3d-canvas canvas {
+    min-height: 420px;
   }
 }

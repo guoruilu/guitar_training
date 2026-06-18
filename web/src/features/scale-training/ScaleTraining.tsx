@@ -5,10 +5,11 @@ import type { TrainingArea, TrainingStats, UserSettings } from '../../shared/sto
 interface ScaleTrainingProps {
   settings: UserSettings;
   stats: TrainingStats;
+  onUpdateSettings(settings: Partial<UserSettings>): void;
   onRecordAttempt(area: TrainingArea, correct: boolean): void;
 }
 
-export function ScaleTraining({ settings, stats, onRecordAttempt }: ScaleTrainingProps) {
+export function ScaleTraining({ settings, stats, onUpdateSettings, onRecordAttempt }: ScaleTrainingProps) {
   return (
     <FretboardPractice
       area="scale"
@@ -16,6 +17,7 @@ export function ScaleTraining({ settings, stats, onRecordAttempt }: ScaleTrainin
       definitions={SCALE_DEFINITIONS}
       settings={settings}
       stats={stats}
+      onUpdateSettings={onUpdateSettings}
       onRecordAttempt={onRecordAttempt}
     />
   );

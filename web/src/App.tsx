@@ -150,8 +150,8 @@ export function App() {
                 value={progress.settings.fretboardStringOrder}
                 onChange={(event) => updateSettings({ fretboardStringOrder: event.target.value as UserSettings['fretboardStringOrder'] })}
               >
-                <option value="first-string-bottom">1弦在下</option>
                 <option value="first-string-top">1弦在上</option>
+                <option value="first-string-bottom">1弦在下</option>
               </select>
             </label>
             <label className="checkbox-row">
@@ -229,11 +229,21 @@ export function App() {
           )}
 
           {activeFeature === 'arpeggio' && (
-            <ArpeggioTraining settings={progress.settings} stats={progress.stats.arpeggio} onRecordAttempt={recordAttempt} />
+            <ArpeggioTraining
+              settings={progress.settings}
+              stats={progress.stats.arpeggio}
+              onUpdateSettings={updateSettings}
+              onRecordAttempt={recordAttempt}
+            />
           )}
 
           {activeFeature === 'scale' && (
-            <ScaleTraining settings={progress.settings} stats={progress.stats.scale} onRecordAttempt={recordAttempt} />
+            <ScaleTraining
+              settings={progress.settings}
+              stats={progress.stats.scale}
+              onUpdateSettings={updateSettings}
+              onRecordAttempt={recordAttempt}
+            />
           )}
         </div>
       </main>
@@ -268,7 +278,7 @@ export function App() {
               </section>
               <section>
                 <h3>指板训练</h3>
-                <p>琶音和音阶页支持点选找音、逐题定位和路线练习。可切换指板视角和琴弦顺序。</p>
+                <p>琶音和音阶页支持手动或随机出题、点选找音、逐题定位和路线练习。可切换图表视角或 3D 第一人称视角。</p>
               </section>
               <section>
                 <h3>数据迁移</h3>

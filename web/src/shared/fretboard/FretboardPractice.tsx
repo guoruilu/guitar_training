@@ -9,11 +9,13 @@ import {
   parsePositionKey,
   positionKey,
 } from '../music/fretboard';
-import { createFretboardChallenge, fretRangeLabel, modeLabel, randomFretRange, randomRoot } from '../music/fretboardTrainer';
-import { NOTE_NAMES_SHARP, noteName, pitchClassesFromIntervals } from '../music/theory';
+import { createFretboardChallenge, fretRangeLabel, modeLabel, randomFretRange } from '../music/fretboardTrainer';
+import { noteName, pitchClassesFromIntervals, randomItem } from '../music/theory';
+import { DEFAULT_FRETBOARD_ROOT_IDS, getRootOption, ROOT_OPTIONS, spellFormula, type RootOption } from '../music/spelling';
 import type { FretboardChallenge, FretboardExerciseMode, FretPosition, PitchClass } from '../music/types';
-import type { TrainingArea, TrainingStats, UserSettings } from '../storage/types';
+import type { FretboardQuestionMode, TrainingArea, TrainingStats, UserSettings } from '../storage/types';
 import { Fretboard } from './Fretboard';
+import { Fretboard3D } from './Fretboard3D';
 
 export interface FretboardDefinition {
   id: string;
@@ -29,6 +31,7 @@ interface FretboardPracticeProps {
   definitions: FretboardDefinition[];
   settings: UserSettings;
   stats: TrainingStats;
+  onUpdateSettings(settings: Partial<UserSettings>): void;
   onRecordAttempt(area: TrainingArea, correct: boolean): void;
 }
 
@@ -50,12 +53,22 @@ function selectedPositionsFromKeys(keys: string[], fretCount: number): FretPosit
     .filter((position): position is FretPosition => Boolean(position));
 }
 
-function buildTitle(root: PitchClass, definition: FretboardDefinition) {
-  return `${noteName(root)}${definition.symbol ?? ` ${definition.label}`}`;
+function buildTitle(root: RootOption, definition: FretboardDefinition) {
+  return `${root.label}${definition.symbol ?? ` ${definition.label}`}`;
 }
 
-function formatPosition(position: FretPosition): string {
-  return `${position.stringNumber}弦${position.fret}品 ${noteName(position.pitchClass)}`;
+function challengeNoteLabel(challenge: FretboardChallenge, pitchClass: PitchClass): string {
+  const targetIndex = challenge.targetPitchClasses.indexOf(pitchClass);
+  return targetIndex >= 0 ? challenge.targetNoteLabels[targetIndex] : positionPitchName(pitchClass);
+}
+
+function positionPitchName(pitchClass: PitchClass): string {
+  return noteName(pitchClass);
+}
+
+function formatPosition(position: FretPosition, challenge: FretboardChallenge): string {
+  const fretLabel = position.fret === 0 ? '空弦' : `${position.fret}品`;
+  return `${position.stringNumber}弦${fretLabel} ${challengeNoteLabel(challenge, position.pitchClass)}`;
 }
 
 function targetPositionsForChallenge(fretCount: number, challenge: FretboardChallenge): FretPosition[] {
@@ -65,13 +78,14 @@ function targetPositionsForChallenge(fretCount: number, challenge: FretboardChal
 }
 
 function buildChallenge(
-  root: PitchClass,
+  root: RootOption,
   definition: FretboardDefinition,
   mode: FretboardExerciseMode,
   fretCount: number,
 ): FretboardChallenge {
   const fretRange = randomFretRange(fretCount);
-  const targetPitchClasses = pitchClassesFromIntervals(root, definition.intervals);
+  const targetPitchClasses = pitchClassesFromIntervals(root.pitchClass, definition.intervals);
+  const targetNoteLabels = spellFormula(root, definition.intervals, definition.degrees);
   const rangePositions = makeFretboard(fretCount).filter((position) => isPositionInFretRange(position, fretRange));
   const focusIndexes = targetPitchClasses
     .map((pitchClass, index) => (rangePositions.some((position) => position.pitchClass === pitchClass) ? index : undefined))
@@ -80,10 +94,12 @@ function buildChallenge(
   return createFretboardChallenge({
     mode,
     title: buildTitle(root, definition),
-    root,
+    root: root.pitchClass,
+    rootName: root.label,
     fretRange,
     intervals: definition.intervals,
     degrees: definition.degrees,
+    noteLabels: targetNoteLabels,
     focusIndexes,
   });
 }
@@ -96,15 +112,39 @@ function accuracy(stats: TrainingStats) {
   return `${Math.round((stats.correct / stats.attempts) * 100)}%`;
 }
 
-export function FretboardPractice({ area, title, definitions, settings, stats, onRecordAttempt }: FretboardPracticeProps) {
-  const [root, setRoot] = useState<PitchClass>(() => randomRoot());
+function targetLabelList(challenge: FretboardChallenge, separator: string): string {
+  return challenge.targetDegrees
+    .map((degree, index) => `${degree}/${challenge.targetNoteLabels[index]}`)
+    .join(separator);
+}
+
+function questionModeKey(area: TrainingArea): 'arpeggioQuestionMode' | 'scaleQuestionMode' {
+  return area === 'scale' ? 'scaleQuestionMode' : 'arpeggioQuestionMode';
+}
+
+export function FretboardPractice({
+  area,
+  title,
+  definitions,
+  settings,
+  stats,
+  onUpdateSettings,
+  onRecordAttempt,
+}: FretboardPracticeProps) {
+  const enabledRootIds = useMemo(
+    () => (settings.enabledFretboardRootIds.length > 0 ? settings.enabledFretboardRootIds : DEFAULT_FRETBOARD_ROOT_IDS),
+    [settings.enabledFretboardRootIds],
+  );
+  const modeSettingKey = questionModeKey(area);
+  const questionMode = settings[modeSettingKey] as FretboardQuestionMode;
+  const [rootId, setRootId] = useState(() => randomItem(enabledRootIds));
   const [definitionId, setDefinitionId] = useState(definitions[0].id);
   const [mode, setMode] = useState<FretboardExerciseMode>('find-all');
+  const rootOption = useMemo(() => getRootOption(rootId), [rootId]);
   const definition = useMemo(() => definitions.find((item) => item.id === definitionId) ?? definitions[0], [definitionId, definitions]);
-  const [challenge, setChallenge] = useState(() => buildChallenge(root, definition, mode, settings.fretCount));
+  const [challenge, setChallenge] = useState(() => buildChallenge(rootOption, definition, mode, settings.fretCount));
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [result, setResult] = useState<ResultState>({ status: 'idle' });
-  const targetPitchClasses = useMemo(() => pitchClassesFromIntervals(root, definition.intervals), [root, definition]);
   const targetPositionsInRange = useMemo(
     () => targetPositionsForChallenge(settings.fretCount, challenge),
     [settings.fretCount, challenge],
@@ -116,17 +156,49 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
       : targetPositionsInRange.length;
 
   useEffect(() => {
-    setChallenge(buildChallenge(root, definition, mode, settings.fretCount));
-    setSelectedKeys([]);
-    setResult({ status: 'idle' });
-  }, [root, definition, mode, settings.fretCount]);
+    if (questionMode === 'random' && !enabledRootIds.includes(rootId)) {
+      setRootId(enabledRootIds[0] ?? DEFAULT_FRETBOARD_ROOT_IDS[0]);
+    }
+  }, [enabledRootIds, questionMode, rootId]);
+
+  useEffect(() => {
+    if (questionMode === 'manual') {
+      setChallenge(buildChallenge(rootOption, definition, mode, settings.fretCount));
+      setSelectedKeys([]);
+      setResult({ status: 'idle' });
+    }
+  }, [rootOption, definition, mode, settings.fretCount, questionMode]);
+
+  useEffect(() => {
+    if (questionMode === 'random') {
+      resetChallenge();
+    }
+  }, [questionMode, mode, settings.fretCount, enabledRootIds]);
 
   function resetChallenge() {
-    const nextRoot = randomRoot();
-    setRoot(nextRoot);
-    setChallenge(buildChallenge(nextRoot, definition, mode, settings.fretCount));
+    const nextRootId = questionMode === 'random' ? randomItem(enabledRootIds) : rootId;
+    const nextDefinition = questionMode === 'random' ? randomItem(definitions) : definition;
+    const nextRootOption = getRootOption(nextRootId);
+
+    setRootId(nextRootId);
+    setDefinitionId(nextDefinition.id);
+    setChallenge(buildChallenge(nextRootOption, nextDefinition, mode, settings.fretCount));
     setSelectedKeys([]);
     setResult({ status: 'idle' });
+  }
+
+  function updateQuestionMode(nextMode: FretboardQuestionMode) {
+    onUpdateSettings({ [modeSettingKey]: nextMode } as Partial<UserSettings>);
+  }
+
+  function toggleRootInPool(root: RootOption) {
+    const hasRoot = enabledRootIds.includes(root.id);
+    if (hasRoot && enabledRootIds.length === 1) {
+      return;
+    }
+
+    const nextRootIds = hasRoot ? enabledRootIds.filter((id) => id !== root.id) : [...enabledRootIds, root.id];
+    onUpdateSettings({ enabledFretboardRootIds: nextRootIds });
   }
 
   function togglePosition(position: FretPosition) {
@@ -140,11 +212,11 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
 
     const key = positionKey(position);
     setSelectedKeys((current) => {
-      if (mode === 'single-note') {
+      if (challenge.mode === 'single-note') {
         return [key];
       }
 
-      if (mode === 'route') {
+      if (challenge.mode === 'route') {
         if (current.includes(key)) {
           return current.filter((item) => item !== key);
         }
@@ -174,17 +246,17 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
       correct = evaluation.correct;
       message = correct
         ? '正确。'
-        : `还缺 ${evaluation.missingPositions.map(formatPosition).join('、') || '无'}；误选 ${evaluation.wrongPositions.map(formatPosition).join('、') || '无'}。`;
+        : `还缺 ${evaluation.missingPositions.map((position) => formatPosition(position, challenge)).join('、') || '无'}；误选 ${evaluation.wrongPositions.map((position) => formatPosition(position, challenge)).join('、') || '无'}。`;
     }
 
     if (challenge.mode === 'single-note') {
       correct = challenge.focusPitchClass !== undefined && evaluateSingleNote(selectedPositions, challenge.focusPitchClass);
-      message = correct ? '正确。' : `目标是 ${challenge.focusDegree} / ${noteName(challenge.focusPitchClass ?? challenge.root)}。`;
+      message = correct ? '正确。' : `目标是 ${challenge.focusDegree} / ${challenge.focusNoteLabel ?? challenge.rootName}。`;
     }
 
     if (challenge.mode === 'route') {
       correct = evaluateRoute(selectedPositions, challenge.targetPitchClasses);
-      message = correct ? '正确。' : `顺序应为 ${challenge.targetDegrees.join(' - ')}。`;
+      message = correct ? '正确。' : `顺序应为 ${targetLabelList(challenge, ' - ')}。`;
     }
 
     onRecordAttempt(area, correct);
@@ -193,14 +265,14 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
 
   function promptText() {
     if (challenge.mode === 'find-all') {
-      return `${challenge.title}：找出范围内所有 ${challenge.targetDegrees.join('、')}`;
+      return `${challenge.title}：找出范围内所有 ${targetLabelList(challenge, '、')}`;
     }
 
     if (challenge.mode === 'single-note') {
-      return `${challenge.title}：${challenge.focusDegree} / ${noteName(challenge.focusPitchClass ?? challenge.root)}`;
+      return `${challenge.title}：${challenge.focusDegree} / ${challenge.focusNoteLabel ?? challenge.rootName}`;
     }
 
-    return `${challenge.title}：${challenge.targetDegrees.join(' - ')}`;
+    return `${challenge.title}：${targetLabelList(challenge, ' - ')}`;
   }
 
   return (
@@ -208,10 +280,10 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
       <div className="exercise-main">
         <div className="section-title-row">
           <div>
-            <p className="eyebrow">{modeLabel(mode)}</p>
+            <p className="eyebrow">{questionMode === 'random' ? '随机出题' : '手动出题'} · {modeLabel(mode)}</p>
             <h2 id={`${area}-title`}>{title}</h2>
           </div>
-          <button type="button" className="secondary-button" onClick={() => playPitchClasses(targetPitchClasses)}>
+          <button type="button" className="secondary-button" onClick={() => playPitchClasses(challenge.targetPitchClasses)}>
             播放目标音
           </button>
         </div>
@@ -222,19 +294,36 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
         </div>
         <p className="helper-text">本题只在 {fretRangeLabel(challenge.fretRange)} 内作答；范围外位置已禁用。</p>
 
-        <Fretboard
-          fretCount={settings.fretCount}
-          selectedKeys={selectedKeys}
-          targetPitchClasses={challenge.targetPitchClasses}
-          targetDegrees={challenge.targetDegrees}
-          revealed={result.status === 'answered'}
-          showNoteNames={settings.showNoteNames}
-          showDegrees={settings.showDegrees}
-          viewMode={settings.fretboardViewMode}
-          stringOrder={settings.fretboardStringOrder}
-          isPositionEnabled={(position) => isPositionInFretRange(position, challenge.fretRange)}
-          onToggle={togglePosition}
-        />
+        {settings.fretboardViewMode === 'player' ? (
+          <Fretboard3D
+            fretCount={settings.fretCount}
+            selectedKeys={selectedKeys}
+            targetPitchClasses={challenge.targetPitchClasses}
+            targetDegrees={challenge.targetDegrees}
+            targetNoteLabels={challenge.targetNoteLabels}
+            revealed={result.status === 'answered'}
+            showNoteNames={settings.showNoteNames}
+            showDegrees={settings.showDegrees}
+            stringOrder={settings.fretboardStringOrder}
+            isPositionEnabled={(position) => isPositionInFretRange(position, challenge.fretRange)}
+            onToggle={togglePosition}
+          />
+        ) : (
+          <Fretboard
+            fretCount={settings.fretCount}
+            selectedKeys={selectedKeys}
+            targetPitchClasses={challenge.targetPitchClasses}
+            targetDegrees={challenge.targetDegrees}
+            targetNoteLabels={challenge.targetNoteLabels}
+            revealed={result.status === 'answered'}
+            showNoteNames={settings.showNoteNames}
+            showDegrees={settings.showDegrees}
+            viewMode={settings.fretboardViewMode}
+            stringOrder={settings.fretboardStringOrder}
+            isPositionEnabled={(position) => isPositionInFretRange(position, challenge.fretRange)}
+            onToggle={togglePosition}
+          />
+        )}
 
         <div className="action-row">
           <button type="button" className="primary-button" onClick={submitAnswer}>
@@ -256,12 +345,32 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
       </div>
 
       <aside className="control-panel">
+        <div>
+          <span className="field-label">出题方式</span>
+          <div className="segmented">
+            <button
+              type="button"
+              className={questionMode === 'manual' ? 'active' : ''}
+              onClick={() => updateQuestionMode('manual')}
+            >
+              手动
+            </button>
+            <button
+              type="button"
+              className={questionMode === 'random' ? 'active' : ''}
+              onClick={() => updateQuestionMode('random')}
+            >
+              随机
+            </button>
+          </div>
+        </div>
+
         <label>
-          根音
-          <select value={root} onChange={(event) => setRoot(Number(event.target.value) as PitchClass)}>
-            {NOTE_NAMES_SHARP.map((name, index) => (
-              <option value={index} key={name}>
-                {name}
+          根音 / 调
+          <select value={rootId} disabled={questionMode === 'random'} onChange={(event) => setRootId(event.target.value)}>
+            {ROOT_OPTIONS.map((item) => (
+              <option value={item.id} key={item.id}>
+                {item.label}
               </option>
             ))}
           </select>
@@ -269,7 +378,11 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
 
         <label>
           类型
-          <select value={definitionId} onChange={(event) => setDefinitionId(event.target.value)}>
+          <select
+            value={definitionId}
+            disabled={questionMode === 'random'}
+            onChange={(event) => setDefinitionId(event.target.value)}
+          >
             {definitions.map((item) => (
               <option value={item.id} key={item.id}>
                 {item.label}
@@ -291,6 +404,35 @@ export function FretboardPractice({ area, title, definitions, settings, stats, o
                 {modeLabel(item)}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="inline-heading">
+            <span className="field-label">随机根音 / 调池</span>
+            <button
+              type="button"
+              className="ghost-button compact-button"
+              onClick={() => onUpdateSettings({ enabledFretboardRootIds: [...DEFAULT_FRETBOARD_ROOT_IDS] })}
+            >
+              全选
+            </button>
+          </div>
+          <div className="root-toggle-grid">
+            {ROOT_OPTIONS.map((item) => {
+              const checked = enabledRootIds.includes(item.id);
+              return (
+                <label className="root-toggle" key={item.id}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={checked && enabledRootIds.length === 1}
+                    onChange={() => toggleRootInPool(item)}
+                  />
+                  <span>{item.label}</span>
+                </label>
+              );
+            })}
           </div>
         </div>
 
