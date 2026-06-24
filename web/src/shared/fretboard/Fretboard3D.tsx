@@ -268,16 +268,10 @@ export function Fretboard3D({
       });
     });
 
-    const headLabel = makeTextSprite('琴头', '#e8e0cd', '#241914', { width: 0.94, height: 0.35 });
+    const headLabel = makeTextSprite('琴头', '#e8e0cd', '#241914', { width: 1.16, height: 0.43 });
     if (headLabel) {
-      headLabel.position.set(0, 0.58, NUT_Z - 1.08);
+      headLabel.position.set(0, 0.72, NUT_Z - 0.98);
       content.add(headLabel);
-    }
-
-    const bodyLabel = makeTextSprite('琴身', '#2dae8e', '#ffffff', { width: 0.94, height: 0.35 });
-    if (bodyLabel) {
-      bodyLabel.position.set(0, 0.6, BODY_Z + 0.38);
-      content.add(bodyLabel);
     }
 
     const fretSpacing = BOARD_LENGTH / fretCount;
@@ -414,6 +408,8 @@ export function Fretboard3D({
 
   return (
     <div className="fretboard-3d-shell" aria-label="3D 第一人称吉他指板">
+      <div className="fretboard-3d-direction top" aria-hidden="true">琴头端</div>
+      <div className="fretboard-3d-direction bottom" aria-hidden="true">琴身端</div>
       <div ref={mountRef} className="fretboard-3d-canvas" />
     </div>
   );

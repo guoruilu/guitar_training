@@ -88,7 +88,7 @@ Scope:
   minor seventh, half-diminished seventh, and diminished seventh chords:
   `7`, `maj7`, `min7`, `m7b5`, `dim7`.
 - Added first-person 3D fretboard orientation cues: a headstock shape, nut,
-  tuning pegs, and `琴头` / `琴身` labels.
+  tuning pegs, a scene `琴头` label, and fixed `琴头端` / `琴身端` canvas labels.
 
 Implementation notes:
 
@@ -105,8 +105,24 @@ Verification:
 - `npm run build`: passed.
 - `npm run desktop:package:win`: passed and refreshed
   `desktop/release/Guitar-Training-0.1.0-windows-portable.exe`.
+- Playwright 3D verification:
+  - Generated desktop and mobile screenshots under
+    `log/playwright-2026-06-24/`.
+  - WebGL `readPixels` found non-background pixels in both viewports.
+  - Drag interaction changed the rendered checksum in both viewports.
+  - Final screenshots show the headstock/nut/tuning pegs and fixed
+    `琴头端` / `琴身端` labels without a central label obstruction.
 - Refreshed portable exe:
   - Size: 81M.
-  - SHA256: `376f7172c56923056d066383868ea898492e44e9d3a7683bf2a371078b55105d`.
+  - SHA256: `ebb598cbd54d7356885b1905dea2a43c857941963f9f592198bfeafec55bea96`.
   - `Get-AuthenticodeSignature`: `NotSigned`, because this run intentionally
     used the normal package flow rather than the local signing fallback.
+
+Environment notes:
+
+- The local WSL Playwright browser cache was missing Chromium at first.
+- `npm --prefix web exec playwright install chromium` downloaded the browser
+  cache.
+- The environment could not install system dependencies through sudo, so the
+  missing Chromium runtime libraries were downloaded with `apt-get download`
+  and unpacked under `/tmp/playwright-libs` for this verification only.

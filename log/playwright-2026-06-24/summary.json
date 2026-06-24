@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-06-24T14:33:11.392Z",
+  "url": "http://127.0.0.1:5180/",
+  "checks": {
+    "desktop": {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "before": {
+        "width": 810,
+        "height": 520,
+        "bright": 7699,
+        "nonBackground": 137573,
+        "checksum": 1120812903
+      },
+      "after": {
+        "width": 810,
+        "height": 520,
+        "bright": 439,
+        "nonBackground": 30941,
+        "checksum": 1477619529
+      },
+      "checksumChanged": true
+    },
+    "mobile": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "before": {
+        "width": 720,
+        "height": 840,
+        "bright": 16823,
+        "nonBackground": 301991,
+        "checksum": 1207143203
+      },
+      "after": {
+        "width": 720,
+        "height": 840,
+        "bright": 9189,
+        "nonBackground": 79866,
+        "checksum": 3788617857
+      },
+      "checksumChanged": true
+    }
+  },
+  "notes": [
+    "Canvas readPixels found non-background and bright pixels in both viewports.",
+    "Drag interaction changed the rendered checksum in both viewports.",
+    "Screenshots capture the headstock/nut/tuning pegs and 琴头端/琴身端 labels without the previous central body-label obstruction."
+  ]
+}
