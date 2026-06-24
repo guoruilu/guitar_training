@@ -126,3 +126,38 @@ Environment notes:
 - The environment could not install system dependencies through sudo, so the
   missing Chromium runtime libraries were downloaded with `apt-get download`
   and unpacked under `/tmp/playwright-libs` for this verification only.
+
+## Default 3D Sixth-String Near Side
+
+Scope:
+
+- Updated the first-person 3D fretboard default so the 6th string is on the
+  side closer to the player camera.
+- Kept the global string-order toggle meaningful in 3D: switching the order
+  flips which outside string is closer to the camera.
+
+Implementation notes:
+
+- Exported `PLAYER_CAMERA_X` and `stringXPositions` from `Fretboard3D` for
+  deterministic tests.
+- Changed the default player camera X offset to the 6th-string side.
+- Changed the default 3D string ordering so `first-string-top` places string
+  index `0` / string number `6` on the near side.
+
+Verification:
+
+- `npm run test`: passed, 6 files and 30 tests.
+- `npm run build`: passed.
+- Playwright 3D verification:
+  - Generated desktop and mobile screenshots under
+    `log/playwright-2026-06-24-sixth-string-near/`.
+  - WebGL `readPixels` found non-background pixels in both viewports.
+  - Drag interaction changed the rendered checksum in both viewports.
+  - Direction labels were present in both viewports.
+- `npm run desktop:package:win`: passed and refreshed
+  `desktop/release/Guitar-Training-0.1.0-windows-portable.exe`.
+- Refreshed portable exe:
+  - Size: 81M.
+  - SHA256: `4f6500289e341550ecb0d96c582dca96b02c703e3a4caeab678e2e5bede3ef09`.
+  - `Get-AuthenticodeSignature`: `NotSigned`, because this run intentionally
+    used the normal package flow rather than the local signing fallback.

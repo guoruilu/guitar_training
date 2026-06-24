@@ -24,6 +24,7 @@ const BOARD_LENGTH = 12.8;
 const BOARD_WIDTH = 2.35;
 const NUT_Z = -BOARD_LENGTH / 2;
 const BODY_Z = BOARD_LENGTH / 2;
+export const PLAYER_CAMERA_X = -0.95;
 
 function makeTextSprite(text: string, background: string, color: string, scale: { width: number; height: number } = { width: 0.78, height: 0.29 }) {
   const canvas = document.createElement('canvas');
@@ -74,8 +75,8 @@ function disposeObject(object: THREE.Object3D) {
   });
 }
 
-function stringXPositions(stringOrder: FretboardStringOrder) {
-  const orderedStringIndexes = stringOrder === 'first-string-top' ? [5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5];
+export function stringXPositions(stringOrder: FretboardStringOrder) {
+  const orderedStringIndexes = stringOrder === 'first-string-top' ? [0, 1, 2, 3, 4, 5] : [5, 4, 3, 2, 1, 0];
   const gap = BOARD_WIDTH / 5;
   return new Map(orderedStringIndexes.map((stringIndex, index) => [stringIndex, -BOARD_WIDTH / 2 + index * gap]));
 }
@@ -142,7 +143,7 @@ export function Fretboard3D({
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x101513);
     const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
-    camera.position.set(0.58, 1.65, BODY_Z + 1.35);
+    camera.position.set(PLAYER_CAMERA_X, 1.65, BODY_Z + 1.35);
     camera.lookAt(0, 0.06, NUT_Z + 1.45);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });

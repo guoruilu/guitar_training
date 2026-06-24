@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { makeFretboard } from '../music/fretboard';
 import { orderFrettedPositions, orderStringGroups } from './Fretboard';
+import { PLAYER_CAMERA_X, stringXPositions } from './Fretboard3D';
 
 describe('fretboard display ordering', () => {
   it('supports first string at the top or bottom', () => {
@@ -15,5 +16,14 @@ describe('fretboard display ordering', () => {
 
     expect(orderFrettedPositions(sixthString, 'diagram').map((position) => position.fret)).toEqual([1, 2, 3, 4]);
     expect(orderFrettedPositions(sixthString, 'player').map((position) => position.fret)).toEqual([4, 3, 2, 1]);
+  });
+
+  it('places the sixth string closer to the default 3D player camera', () => {
+    const defaultPositions = stringXPositions('first-string-top');
+    const flippedPositions = stringXPositions('first-string-bottom');
+    const distanceToCamera = (x: number) => Math.abs(x - PLAYER_CAMERA_X);
+
+    expect(distanceToCamera(defaultPositions.get(0) ?? 0)).toBeLessThan(distanceToCamera(defaultPositions.get(5) ?? 0));
+    expect(distanceToCamera(flippedPositions.get(5) ?? 0)).toBeLessThan(distanceToCamera(flippedPositions.get(0) ?? 0));
   });
 });

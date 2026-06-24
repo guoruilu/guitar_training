@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-06-24T14:49:48.415Z",
+  "url": "http://127.0.0.1:5180/",
+  "checks": {
+    "desktop": {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "labels": [
+        "琴头端",
+        "琴身端"
+      ],
+      "before": {
+        "width": 810,
+        "height": 520,
+        "bright": 7144,
+        "nonBackground": 136565,
+        "checksum": 103697742
+      },
+      "after": {
+        "width": 810,
+        "height": 520,
+        "bright": 439,
+        "nonBackground": 30818,
+        "checksum": 2495766716
+      },
+      "checksumChanged": true
+    },
+    "mobile": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "labels": [
+        "琴头端",
+        "琴身端"
+      ],
+      "before": {
+        "width": 720,
+        "height": 840,
+        "bright": 17564,
+        "nonBackground": 291889,
+        "checksum": 244186605
+      },
+      "after": {
+        "width": 720,
+        "height": 840,
+        "bright": 8808,
+        "nonBackground": 71666,
+        "checksum": 3454191978
+      },
+      "checksumChanged": true
+    }
+  },
+  "notes": [
+    "Canvas readPixels found non-background and bright pixels in both viewports.",
+    "Drag interaction changed the rendered checksum in both viewports.",
+    "Direction labels are present in both viewports.",
+    "Unit tests assert the default 3D string layout places string number 6 closer to the player camera."
+  ]
+}
