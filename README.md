@@ -52,3 +52,32 @@ Windows 桌面打包：
 npm --prefix desktop install
 npm run desktop:package:win
 ```
+
+上面的普通打包命令不会附带公开可信的代码签名证书。Windows 11
+“智能应用控制”可能会拦截这种未签名的 portable exe。
+
+不购买正式代码签名证书时，可以在自己的 Windows 电脑上使用本机开发签名打包。
+这个命令可从 Windows PowerShell 或 WSL 运行，但必须能调用到 Windows 的
+`powershell.exe`：
+
+```powershell
+npm run desktop:package:win:local-signed
+```
+
+也可以直接双击根目录的 `package-guitar-training-local-signed.cmd`。
+
+这个流程会：
+
+- 在当前命令运行环境中用 `npm ci` 安装 `web/` 和 `desktop/` 依赖。
+- 构建 Web 应用和 Electron Windows portable exe。
+- 调用 Windows PowerShell，在当前 Windows 用户证书库中创建或复用一个本机自签名代码签名证书。
+- 将该证书的公钥加入当前 Windows 用户的 Trusted Root 和 Trusted Publishers。
+- 签名 `win-unpacked` 内部 exe 和最终 portable exe。
+
+这只是本机临时方案：生成的 exe 通常可在当前电脑当前用户下直接运行，但换到其他
+Windows 电脑仍然需要对方自己运行同一套本机签名流程，或改用正式代码签名证书 /
+Microsoft Store 发布。要移除这个本机信任：
+
+```powershell
+npm run desktop:remove-local-dev-signing
+```

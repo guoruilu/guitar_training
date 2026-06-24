@@ -10,6 +10,8 @@
     "web:test": "npm --prefix web run test",
     "web:build": "npm --prefix web run build",
     "desktop:dev": "npm --prefix desktop run dev",
-    "desktop:package:win": "npm --prefix desktop run package:win"
+    "desktop:package:win": "npm --prefix desktop run package:win",
+    "desktop:package:win:local-signed": "node desktop/scripts/package-win-local-signed.mjs",
+    "desktop:remove-local-dev-signing": "node desktop/scripts/remove-local-dev-signing.mjs"
   }
 }

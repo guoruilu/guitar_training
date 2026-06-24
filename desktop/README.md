@@ -30,6 +30,30 @@ The portable Windows executable is written to `desktop/release/`.
 It includes the built web app as an Electron resource, so users do not need
 Node.js, npm, WSL, or separate audio/assets.
 
+The normal package is unsigned. On Windows 11 machines with Smart App Control
+enabled, an unsigned portable exe can be blocked before it starts.
+
+For local development without buying a public code-signing certificate, run this
+from Windows PowerShell or WSL. The signing step must be able to call Windows
+`powershell.exe`:
+
+```powershell
+npm run package:win:local-signed
+```
+
+This creates or reuses a self-signed code-signing certificate for the current
+Windows user, trusts it in the current user's certificate stores, installs
+dependencies with `npm ci` in the current command environment, signs the
+unpacked app, packages the portable exe from the signed app, then signs the
+portable exe. The result is intended for the same Windows user on the same
+computer. It is not a public distribution signature.
+
+Remove the local development certificate trust with:
+
+```powershell
+npm run remove-local-dev-signing
+```
+
 ## Data
 
 The app still uses browser `localStorage`, persisted by Electron under its

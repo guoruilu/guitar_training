@@ -7,7 +7,9 @@
   "scripts": {
     "dev": "npm --prefix ../web run build && electron .",
     "start": "electron .",
-    "package:win": "npm --prefix ../web run build && electron-builder --win portable"
+    "package:win": "npm --prefix ../web run build && electron-builder --win portable",
+    "package:win:local-signed": "node scripts/package-win-local-signed.mjs",
+    "remove-local-dev-signing": "node scripts/remove-local-dev-signing.mjs"
   },
   "devDependencies": {
     "electron": "^39.2.7",
