@@ -1,0 +1,71 @@
+{
+  "generatedAt": "2026-06-24T15:43:02.285Z",
+  "url": "http://127.0.0.1:5180/",
+  "checks": {
+    "desktop": {
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "collapsed": [
+        {
+          "text": "选择和弦5 / 36",
+          "open": false,
+          "checkboxCount": 36
+        },
+        {
+          "text": "选择根音 / 调21 / 21",
+          "open": false,
+          "checkboxCount": 21
+        }
+      ],
+      "expanded": [
+        {
+          "text": "选择和弦5 / 36",
+          "open": true,
+          "visibleCheckboxes": 36
+        },
+        {
+          "text": "选择根音 / 调21 / 21",
+          "open": true,
+          "visibleCheckboxes": 21
+        }
+      ]
+    },
+    "mobile": {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "collapsed": [
+        {
+          "text": "选择和弦5 / 36",
+          "open": false,
+          "checkboxCount": 36
+        },
+        {
+          "text": "选择根音 / 调21 / 21",
+          "open": false,
+          "checkboxCount": 21
+        }
+      ],
+      "expanded": [
+        {
+          "text": "选择和弦5 / 36",
+          "open": true,
+          "visibleCheckboxes": 36
+        },
+        {
+          "text": "选择根音 / 调21 / 21",
+          "open": true,
+          "visibleCheckboxes": 21
+        }
+      ]
+    }
+  },
+  "notes": [
+    "Arpeggio chord and root/key pool panels are collapsed by default.",
+    "Panel summaries show selected counts.",
+    "Clicking each summary expands the checkbox grids on desktop and mobile viewports."
+  ]
+}

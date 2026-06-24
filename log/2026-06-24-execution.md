@@ -161,3 +161,38 @@ Verification:
   - SHA256: `4f6500289e341550ecb0d96c582dca96b02c703e3a4caeab678e2e5bede3ef09`.
   - `Get-AuthenticodeSignature`: `NotSigned`, because this run intentionally
     used the normal package flow rather than the local signing fallback.
+
+## Collapsible Random Pools
+
+Scope:
+
+- Changed the random arpeggio chord pool selector into a collapsible panel.
+- Changed the random root/key pool selector into a collapsible panel.
+- Kept the existing selected pools, default/all actions, and one-item minimum
+  selection guards unchanged.
+
+Implementation notes:
+
+- Used native `details` / `summary` so the panels can expand and collapse
+  without extra persisted UI state.
+- Panel summaries show the current selected count and total option count.
+- The expanded content keeps the existing checkbox grids.
+
+Verification:
+
+- `npm run test`: passed, 6 files and 30 tests.
+- `npm run build`: passed.
+- Playwright control-panel verification:
+  - Generated desktop and mobile screenshots under
+    `log/playwright-2026-06-24-collapsible-pools/`.
+  - Arpeggio chord and root/key pool panels were collapsed by default.
+  - Panel summaries showed selected counts.
+  - Clicking each summary expanded the checkbox grids on desktop and mobile
+    viewports.
+- `npm run desktop:package:win`: passed and refreshed
+  `desktop/release/Guitar-Training-0.1.0-windows-portable.exe`.
+- Refreshed portable exe:
+  - Size: 81M.
+  - SHA256: `7ab895e7b8974f0afb001352ac4715465330a3dde87ca542b3f9577a8792d49b`.
+  - `Get-AuthenticodeSignature`: `NotSigned`, because this run intentionally
+    used the normal package flow rather than the local signing fallback.

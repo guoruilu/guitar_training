@@ -445,9 +445,12 @@ export function FretboardPractice({
         </label>
 
         {isArpeggio && (
-          <div>
-            <div className="inline-heading">
-              <span className="field-label">随机和弦池</span>
+          <details className="collapsible-picker">
+            <summary>
+              <span>选择和弦</span>
+              <span>{enabledArpeggioChordIds.length} / {definitions.length}</span>
+            </summary>
+            <div className="collapsible-picker-body">
               <div className="inline-actions">
                 <button type="button" className="ghost-button compact-button" onClick={useDefaultArpeggioChordPool}>
                   默认
@@ -460,24 +463,24 @@ export function FretboardPractice({
                   全选
                 </button>
               </div>
+              <div className="chord-toggle-grid">
+                {definitions.map((item) => {
+                  const checked = enabledArpeggioChordIds.includes(item.id);
+                  return (
+                    <label className="chord-toggle" key={item.id} title={item.label}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        disabled={checked && enabledArpeggioChordIds.length === 1}
+                        onChange={() => toggleArpeggioChordInPool(item)}
+                      />
+                      <span>{definitionShortLabel(item)}</span>
+                    </label>
+                  );
+                })}
+              </div>
             </div>
-            <div className="chord-toggle-grid">
-              {definitions.map((item) => {
-                const checked = enabledArpeggioChordIds.includes(item.id);
-                return (
-                  <label className="chord-toggle" key={item.id} title={item.label}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      disabled={checked && enabledArpeggioChordIds.length === 1}
-                      onChange={() => toggleArpeggioChordInPool(item)}
-                    />
-                    <span>{definitionShortLabel(item)}</span>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
+          </details>
         )}
 
         <div>
@@ -496,34 +499,39 @@ export function FretboardPractice({
           </div>
         </div>
 
-        <div>
-          <div className="inline-heading">
-            <span className="field-label">随机根音 / 调池</span>
-            <button
-              type="button"
-              className="ghost-button compact-button"
-              onClick={() => onUpdateSettings({ enabledFretboardRootIds: [...DEFAULT_FRETBOARD_ROOT_IDS] })}
-            >
-              全选
-            </button>
+        <details className="collapsible-picker">
+          <summary>
+            <span>选择根音 / 调</span>
+            <span>{enabledRootIds.length} / {ROOT_OPTIONS.length}</span>
+          </summary>
+          <div className="collapsible-picker-body">
+            <div className="inline-actions">
+              <button
+                type="button"
+                className="ghost-button compact-button"
+                onClick={() => onUpdateSettings({ enabledFretboardRootIds: [...DEFAULT_FRETBOARD_ROOT_IDS] })}
+              >
+                全选
+              </button>
+            </div>
+            <div className="root-toggle-grid">
+              {ROOT_OPTIONS.map((item) => {
+                const checked = enabledRootIds.includes(item.id);
+                return (
+                  <label className="root-toggle" key={item.id}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={checked && enabledRootIds.length === 1}
+                      onChange={() => toggleRootInPool(item)}
+                    />
+                    <span>{item.label}</span>
+                  </label>
+                );
+              })}
+            </div>
           </div>
-          <div className="root-toggle-grid">
-            {ROOT_OPTIONS.map((item) => {
-              const checked = enabledRootIds.includes(item.id);
-              return (
-                <label className="root-toggle" key={item.id}>
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    disabled={checked && enabledRootIds.length === 1}
-                    onChange={() => toggleRootInPool(item)}
-                  />
-                  <span>{item.label}</span>
-                </label>
-              );
-            })}
-          </div>
-        </div>
+        </details>
 
         <div className="stats-grid">
           <span>次数<strong>{stats.attempts}</strong></span>

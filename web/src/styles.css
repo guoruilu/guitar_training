@@ -807,6 +807,65 @@ select:disabled {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.collapsible-picker {
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.collapsible-picker summary {
+  align-items: center;
+  color: var(--text);
+  cursor: pointer;
+  display: grid;
+  font-size: 13px;
+  font-weight: 800;
+  gap: 8px;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  list-style: none;
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.collapsible-picker summary::-webkit-details-marker {
+  display: none;
+}
+
+.collapsible-picker summary::before {
+  color: var(--muted);
+  content: '>';
+  font-size: 12px;
+  transform-origin: center;
+  transition: transform 160ms ease;
+}
+
+.collapsible-picker[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.collapsible-picker summary span {
+  min-width: 0;
+}
+
+.collapsible-picker summary span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collapsible-picker summary span:last-child {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.collapsible-picker-body {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
 .root-toggle-grid {
   display: grid;
   gap: 6px;
