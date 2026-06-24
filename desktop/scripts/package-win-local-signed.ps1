@@ -3,6 +3,7 @@ param(
   [int]$CertificateYears = 3,
   [switch]$SkipInstall,
   [switch]$SkipWebBuild,
+  [switch]$ConfirmedLocalDevSigning,
   [switch]$NoTimestamp
 )
 
@@ -13,11 +14,36 @@ if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
   throw "Local Windows signing must be run from Windows PowerShell on Windows."
 }
 
+$confirmationPhrase = "SMART APP CONTROL BLOCKED"
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $webDir = Join-Path $repoRoot "web"
 $desktopDir = Join-Path $repoRoot "desktop"
 $releaseDir = Join-Path $desktopDir "release"
 $unpackedDir = Join-Path $releaseDir "win-unpacked"
+
+function Confirm-LocalDevSigning {
+  if ($ConfirmedLocalDevSigning) {
+    return
+  }
+
+  Write-Host ""
+  Write-Host "Local Windows development signing fallback"
+  Write-Host ""
+  Write-Host "Use this workflow only when the normal unsigned portable exe is blocked by Windows Smart App Control on this computer."
+  Write-Host "This workflow will:"
+  Write-Host "- create or reuse a self-signed code-signing certificate in Cert:\CurrentUser\My;"
+  Write-Host "- trust that certificate for the current Windows user in Cert:\CurrentUser\Root and Cert:\CurrentUser\TrustedPublisher;"
+  Write-Host "- install dependencies, build the app, sign the unpacked exe files, and sign the final portable exe;"
+  Write-Host "- affect only the current Windows user on this computer, not other computers."
+  Write-Host ""
+  Write-Host "Remove this local trust later with: npm run desktop:remove-local-dev-signing"
+  Write-Host ""
+
+  $answer = Read-Host "Type `"$confirmationPhrase`" to continue"
+  if ($answer.Trim() -ne $confirmationPhrase) {
+    throw "Local signing was not confirmed. Nothing was changed."
+  }
+}
 
 function Get-NativeCommandPath {
   param([string[]]$Names)
@@ -176,6 +202,8 @@ function Get-PortableExe {
 
 $npm = Get-NativeCommandPath -Names @("npm.cmd", "npm")
 $node = Get-NativeCommandPath -Names @("node.exe", "node")
+
+Confirm-LocalDevSigning
 
 if (-not $SkipInstall) {
   Write-Host "Installing Windows-compatible dependencies with npm ci..."

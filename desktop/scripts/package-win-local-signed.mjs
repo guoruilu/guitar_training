@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
@@ -10,6 +11,7 @@ const webDir = path.join(repoRoot, 'web');
 const releaseDir = path.join(desktopDir, 'release');
 const unpackedDir = path.join(releaseDir, 'win-unpacked');
 const signScript = path.join(scriptDir, 'sign-windows-local-dev.ps1');
+const confirmationPhrase = 'SMART APP CONTROL BLOCKED';
 
 function run(command, args, cwd) {
   console.log(`\n> ${command} ${args.join(' ')}`);
@@ -104,6 +106,8 @@ function signFiles(filePaths) {
     'Bypass',
     '-File',
     toWindowsPath(signScript),
+    '-ConfirmedLocalDevSigning',
+    '-NoTimestamp',
     '-FilePath',
     ...filePaths.map(toWindowsPath),
   ];
@@ -111,23 +115,61 @@ function signFiles(filePaths) {
   run(powershellCommand(), args, repoRoot);
 }
 
-run(commandName('npm'), ['--prefix', webDir, 'ci'], repoRoot);
-run(commandName('npm'), ['--prefix', desktopDir, 'ci'], repoRoot);
-run(commandName('npm'), ['--prefix', webDir, 'run', 'build'], repoRoot);
+async function confirmLocalSigning() {
+  console.log('');
+  console.log('Local Windows development signing fallback');
+  console.log('');
+  console.log('Use this workflow only when the normal unsigned portable exe is blocked by Windows Smart App Control on this computer.');
+  console.log('This workflow will:');
+  console.log('- create or reuse a self-signed code-signing certificate in Cert:\\CurrentUser\\My;');
+  console.log('- trust that certificate for the current Windows user in Cert:\\CurrentUser\\Root and Cert:\\CurrentUser\\TrustedPublisher;');
+  console.log('- sign the unpacked Electron exe files and the final portable exe;');
+  console.log('- affect only the current Windows user on this computer, not other computers.');
+  console.log('');
+  console.log('Remove this local trust later with: npm run desktop:remove-local-dev-signing');
+  console.log('');
 
-const builder = electronBuilderCommand();
-run(builder, ['--win', 'dir', '--publish', 'never'], desktopDir);
+  if (!process.stdin.isTTY) {
+    throw new Error(`Local signing requires an interactive confirmation. Re-run in a terminal and type: ${confirmationPhrase}`);
+  }
 
-if (!existsSync(unpackedDir)) {
-  throw new Error(`Unpacked Windows app was not created at ${unpackedDir}`);
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question(`Type "${confirmationPhrase}" to continue: `);
+    if (answer.trim() !== confirmationPhrase) {
+      throw new Error('Local signing was not confirmed. Nothing was changed.');
+    }
+  } finally {
+    rl.close();
+  }
 }
 
-signFiles(listExeFiles(unpackedDir));
+async function main() {
+  await confirmLocalSigning();
 
-run(builder, ['--win', 'portable', '--prepackaged', unpackedDir, '--publish', 'never'], desktopDir);
+  run(commandName('npm'), ['--prefix', webDir, 'ci'], repoRoot);
+  run(commandName('npm'), ['--prefix', desktopDir, 'ci'], repoRoot);
+  run(commandName('npm'), ['--prefix', webDir, 'run', 'build'], repoRoot);
 
-const portableExe = latestPortableExe();
-signFiles([portableExe]);
+  const builder = electronBuilderCommand();
+  run(builder, ['--win', 'dir', '--publish', 'never'], desktopDir);
 
-console.log('\nLocal signed portable exe:');
-console.log(portableExe);
+  if (!existsSync(unpackedDir)) {
+    throw new Error(`Unpacked Windows app was not created at ${unpackedDir}`);
+  }
+
+  signFiles(listExeFiles(unpackedDir));
+
+  run(builder, ['--win', 'portable', '--prepackaged', unpackedDir, '--publish', 'never'], desktopDir);
+
+  const portableExe = latestPortableExe();
+  signFiles([portableExe]);
+
+  console.log('\nLocal signed portable exe:');
+  console.log(portableExe);
+}
+
+main().catch((error) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});

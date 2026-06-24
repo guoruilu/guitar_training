@@ -66,6 +66,9 @@ npm run desktop:package:win:local-signed
 ```
 
 也可以直接双击根目录的 `package-guitar-training-local-signed.cmd`。
+脚本会先说明它将修改当前 Windows 用户的证书信任区，并要求手动输入
+`SMART APP CONTROL BLOCKED` 才会继续；如果只是正常打包或当前 exe 已能打开，
+不要执行这个备用流程。
 
 这个流程会：
 
@@ -74,6 +77,7 @@ npm run desktop:package:win:local-signed
 - 调用 Windows PowerShell，在当前 Windows 用户证书库中创建或复用一个本机自签名代码签名证书。
 - 将该证书的公钥加入当前 Windows 用户的 Trusted Root 和 Trusted Publishers。
 - 签名 `win-unpacked` 内部 exe 和最终 portable exe。
+- 通过 npm 入口执行时默认不请求外部时间戳服务，避免本机备用流程依赖外部网络。
 
 这只是本机临时方案，应只在普通打包/直接运行失败时再尝试。生成的 exe 通常可在
 当前电脑当前用户下直接运行，但换到其他 Windows 电脑仍然需要对方自己运行同一套

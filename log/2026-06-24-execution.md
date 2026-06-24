@@ -196,3 +196,59 @@ Verification:
   - SHA256: `7ab895e7b8974f0afb001352ac4715465330a3dde87ca542b3f9577a8792d49b`.
   - `Get-AuthenticodeSignature`: `NotSigned`, because this run intentionally
     used the normal package flow rather than the local signing fallback.
+
+## Local Signing Confirmation Guard
+
+Scope:
+
+- Added an explicit interactive confirmation before any local development
+  signing fallback can change the current Windows user's certificate stores.
+- The Node packaging entry, the PowerShell packaging entry, and the PowerShell
+  single-file signing helper now all explain that the fallback should only be
+  used when the normal unsigned portable exe is blocked by Windows Smart App
+  Control.
+- The fallback requires typing `SMART APP CONTROL BLOCKED` before it creates or
+  reuses the self-signed code-signing certificate, trusts it for the current
+  Windows user, and signs exe files.
+
+Implementation notes:
+
+- The Node packaging script passes `-ConfirmedLocalDevSigning` to the lower
+  level PowerShell signing helper after the top-level confirmation has already
+  been accepted, avoiding duplicate prompts in the normal fallback workflow.
+- The Node packaging script also passes `-NoTimestamp` so the local fallback
+  does not depend on an external timestamp server during signing.
+- Documentation now calls out the confirmation phrase, the current-user trust
+  store impact, the same-computer/current-user limitation, and the removal
+  command.
+
+Execution notes:
+
+- First execution of `npm run desktop:package:win:local-signed` displayed the
+  confirmation warning and waited for `SMART APP CONTROL BLOCKED` as intended.
+- The first run stalled while Windows PowerShell attempted the external
+  timestamp signing path, so it was stopped and the npm packaging entry was
+  changed to pass `-NoTimestamp` by default.
+- Re-ran `npm run desktop:package:win:local-signed`, confirmed with
+  `SMART APP CONTROL BLOCKED`, and completed the local signing fallback.
+- The signing flow created or reused this current-user certificate:
+  - Subject: `CN=Guitar Training Local Dev Code Signing`
+  - Thumbprint: `8D72604AFFC7DF1A9E4A44280633F8AC97DF6BF3`
+  - Valid from: `2026-06-24 18:02:16`
+  - Valid until: `2029-06-24 18:12:16`
+- Refreshed local-signed portable exe:
+  - Path: `desktop/release/Guitar-Training-0.1.0-windows-portable.exe`
+  - Size: 81M
+  - SHA256: `ddaab4315165775b806d07d678b820bdb3e9b2535a7098f0729f3b1edc3ccac5`
+  - `Get-AuthenticodeSignature`: `Valid`
+  - Status message: `Signature verified.`
+
+Verification:
+
+- `node --check desktop/scripts/package-win-local-signed.mjs`: passed.
+- Windows PowerShell parser check for `desktop/scripts/sign-windows-local-dev.ps1`: passed.
+- Windows PowerShell parser check for `desktop/scripts/package-win-local-signed.ps1`: passed.
+- `npm run test`: passed, 6 files and 30 tests.
+- `npm run build`: passed before packaging.
+- `npm run desktop:package:win:local-signed`: passed after confirming the
+  warning prompt.

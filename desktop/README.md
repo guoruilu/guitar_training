@@ -43,13 +43,20 @@ Windows `powershell.exe`:
 npm run package:win:local-signed
 ```
 
+Before changing certificate stores, the script prints what it will do and
+requires the exact confirmation phrase `SMART APP CONTROL BLOCKED`. Do not run
+this fallback when the normal portable exe already opens on the current
+computer.
+
 This creates or reuses a self-signed code-signing certificate for the current
 Windows user, trusts it in the current user's certificate stores, installs
 dependencies with `npm ci` in the current command environment, signs the
 unpacked app, packages the portable exe from the signed app, then signs the
-portable exe. Use it only when the normal package or direct run path fails. The
-result is intended for the same Windows user on the same computer. It is not a
-public distribution signature.
+portable exe. The npm entry signs without an external timestamp server by
+default so the local fallback does not depend on that network call. Use it only
+when the normal package or direct run path fails. The result is intended for the
+same Windows user on the same computer. It is not a public distribution
+signature.
 
 Remove the local development certificate trust with:
 

@@ -3,6 +3,7 @@ param(
   [string[]]$FilePath,
   [string]$CertificateSubject = "CN=Guitar Training Local Dev Code Signing",
   [int]$CertificateYears = 3,
+  [switch]$ConfirmedLocalDevSigning,
   [switch]$NoTimestamp
 )
 
@@ -11,6 +12,32 @@ Set-StrictMode -Version 2.0
 
 if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT) {
   throw "Local Windows signing must be run by Windows PowerShell."
+}
+
+$confirmationPhrase = "SMART APP CONTROL BLOCKED"
+
+function Confirm-LocalDevSigning {
+  if ($ConfirmedLocalDevSigning) {
+    return
+  }
+
+  Write-Host ""
+  Write-Host "Local Windows development signing fallback"
+  Write-Host ""
+  Write-Host "Use this workflow only when the normal unsigned portable exe is blocked by Windows Smart App Control on this computer."
+  Write-Host "This workflow will:"
+  Write-Host "- create or reuse a self-signed code-signing certificate in Cert:\CurrentUser\My;"
+  Write-Host "- trust that certificate for the current Windows user in Cert:\CurrentUser\Root and Cert:\CurrentUser\TrustedPublisher;"
+  Write-Host "- sign the requested exe files;"
+  Write-Host "- affect only the current Windows user on this computer, not other computers."
+  Write-Host ""
+  Write-Host "Remove this local trust later with: npm run desktop:remove-local-dev-signing"
+  Write-Host ""
+
+  $answer = Read-Host "Type `"$confirmationPhrase`" to continue"
+  if ($answer.Trim() -ne $confirmationPhrase) {
+    throw "Local signing was not confirmed. Nothing was changed."
+  }
 }
 
 function Get-LocalCodeSigningCertificate {
@@ -122,6 +149,8 @@ function Set-LocalSignature {
     throw "Signature verification failed for $TargetFile. Status: $($verified.Status). $($verified.StatusMessage)"
   }
 }
+
+Confirm-LocalDevSigning
 
 $cert = Ensure-LocalSigningCertificate -Subject $CertificateSubject -Years $CertificateYears
 
