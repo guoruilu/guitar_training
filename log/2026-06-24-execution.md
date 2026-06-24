@@ -50,6 +50,8 @@ a public code-signing certificate yet.
 
 - This is a local development workaround. It does not create a portable public
   trust chain for other Windows computers.
+- The documented order is to try the normal package first, then use local
+  signing only as a fallback if Windows Smart App Control blocks the normal exe.
 - Each developer/user must run the local signed package workflow on their own
   Windows account, or the project must use a public code-signing certificate.
 
