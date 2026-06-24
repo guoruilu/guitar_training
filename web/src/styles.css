@@ -462,7 +462,13 @@ select:disabled {
 .inline-heading {
   align-items: center;
   display: flex;
+  gap: 10px;
   justify-content: space-between;
+}
+
+.inline-actions {
+  display: flex;
+  gap: 6px;
 }
 
 .interval-picker {
@@ -802,6 +808,40 @@ select:disabled {
   height: 14px;
   margin: 0;
   width: 14px;
+}
+
+.chord-toggle-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chord-toggle {
+  align-items: center;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  display: grid;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 6px;
+  grid-template-columns: 14px minmax(0, 1fr);
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
+.chord-toggle input {
+  height: 14px;
+  margin: 0;
+  width: 14px;
+}
+
+.chord-toggle span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 1120px) {

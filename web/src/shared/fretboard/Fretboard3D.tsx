@@ -25,7 +25,7 @@ const BOARD_WIDTH = 2.35;
 const NUT_Z = -BOARD_LENGTH / 2;
 const BODY_Z = BOARD_LENGTH / 2;
 
-function makeTextSprite(text: string, background: string, color: string) {
+function makeTextSprite(text: string, background: string, color: string, scale: { width: number; height: number } = { width: 0.78, height: 0.29 }) {
   const canvas = document.createElement('canvas');
   canvas.width = 256;
   canvas.height = 96;
@@ -52,7 +52,7 @@ function makeTextSprite(text: string, background: string, color: string) {
   texture.colorSpace = THREE.SRGBColorSpace;
   const material = new THREE.SpriteMaterial({ map: texture, transparent: true });
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(0.78, 0.29, 1);
+  sprite.scale.set(scale.width, scale.height, 1);
 
   return sprite;
 }
@@ -234,7 +234,52 @@ export function Fretboard3D({
     side.position.set(0, -0.24, 0.03);
     content.add(side);
 
+    const headstockMaterial = new THREE.MeshStandardMaterial({ color: 0x241914, roughness: 0.72, metalness: 0.04 });
+    const headstock = new THREE.Mesh(new THREE.BoxGeometry(BOARD_WIDTH + 0.98, 0.2, 1.16), headstockMaterial);
+    headstock.position.set(0, -0.02, NUT_Z - 0.78);
+    headstock.castShadow = true;
+    headstock.receiveShadow = true;
+    content.add(headstock);
+
+    const headstockEnd = new THREE.Mesh(new THREE.BoxGeometry(BOARD_WIDTH + 1.18, 0.22, 0.18), headstockMaterial);
+    headstockEnd.position.set(0, -0.01, NUT_Z - 1.42);
+    headstockEnd.castShadow = true;
+    content.add(headstockEnd);
+
     const fretMaterial = new THREE.MeshStandardMaterial({ color: 0xd8cfba, metalness: 0.85, roughness: 0.24 });
+    const nut = new THREE.Mesh(new THREE.BoxGeometry(BOARD_WIDTH + 0.34, 0.17, 0.08), fretMaterial);
+    nut.position.set(0, 0.16, NUT_Z);
+    nut.castShadow = true;
+    content.add(nut);
+
+    const pegMaterial = new THREE.MeshStandardMaterial({ color: 0xb9b0a0, metalness: 0.78, roughness: 0.26 });
+    [-1, 1].forEach((sideSign) => {
+      [0, 1, 2].forEach((pegIndex) => {
+        const peg = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.42, 20), pegMaterial);
+        peg.rotation.z = Math.PI / 2;
+        peg.position.set(sideSign * (BOARD_WIDTH / 2 + 0.52), 0.11, NUT_Z - 1.17 + pegIndex * 0.25);
+        peg.castShadow = true;
+        content.add(peg);
+
+        const button = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 0.16), pegMaterial);
+        button.position.set(sideSign * (BOARD_WIDTH / 2 + 0.78), 0.11, peg.position.z);
+        button.castShadow = true;
+        content.add(button);
+      });
+    });
+
+    const headLabel = makeTextSprite('琴头', '#e8e0cd', '#241914', { width: 0.94, height: 0.35 });
+    if (headLabel) {
+      headLabel.position.set(0, 0.58, NUT_Z - 1.08);
+      content.add(headLabel);
+    }
+
+    const bodyLabel = makeTextSprite('琴身', '#2dae8e', '#ffffff', { width: 0.94, height: 0.35 });
+    if (bodyLabel) {
+      bodyLabel.position.set(0, 0.6, BODY_Z + 0.38);
+      content.add(bodyLabel);
+    }
+
     const fretSpacing = BOARD_LENGTH / fretCount;
     for (let fret = 0; fret <= fretCount; fret += 1) {
       const fretWire = new THREE.Mesh(new THREE.BoxGeometry(BOARD_WIDTH + 0.18, fret === 0 ? 0.11 : 0.07, 0.045), fretMaterial);
@@ -265,11 +310,11 @@ export function Fretboard3D({
       const radius = 0.012 + (5 - stringIndex) * 0.0042;
       const stringMaterial = new THREE.MeshStandardMaterial({ color: 0xc7b78f, metalness: 0.9, roughness: 0.26 });
       const string = new THREE.Mesh(
-        new THREE.CylinderGeometry(radius, radius, BOARD_LENGTH + 0.7, 18),
+        new THREE.CylinderGeometry(radius, radius, BOARD_LENGTH + 1.65, 18),
         stringMaterial,
       );
       string.rotation.x = Math.PI / 2;
-      string.position.set(x, 0.17 + (5 - stringIndex) * 0.004, 0);
+      string.position.set(x, 0.17 + (5 - stringIndex) * 0.004, -0.28);
       string.castShadow = true;
       content.add(string);
     }

@@ -26,6 +26,7 @@ export interface UserSettings {
   earTrainingMinMidi: number;
   earTrainingMaxMidi: number;
   enabledFretboardRootIds: string[];
+  enabledArpeggioChordIds: string[];
   arpeggioQuestionMode: FretboardQuestionMode;
   scaleQuestionMode: FretboardQuestionMode;
 }

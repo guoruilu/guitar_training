@@ -81,6 +81,36 @@ export const CHORD_QUALITIES: ChordQuality[] = [
   { id: 'maj7#11', label: '大七升十一和弦', symbol: 'maj7#11', intervals: [0, 4, 7, 11, 18], degrees: ['R', '3', '5', '7', '#11'] },
 ];
 
+export const DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS = ['7', 'maj7', 'min7', 'm7b5', 'dim7'] as const;
+
+export function normalizeChordQualityIds(
+  ids: unknown,
+  fallback: readonly string[] = DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS,
+): string[] {
+  const validIds = new Set(CHORD_QUALITIES.map((quality) => quality.id));
+  const fallbackIds = fallback.filter((id) => validIds.has(id));
+
+  if (!Array.isArray(ids)) {
+    return fallbackIds.length > 0 ? [...fallbackIds] : CHORD_QUALITIES.map((quality) => quality.id);
+  }
+
+  const seen = new Set<string>();
+  const result = ids.filter((id): id is string => {
+    if (typeof id !== 'string' || !validIds.has(id) || seen.has(id)) {
+      return false;
+    }
+
+    seen.add(id);
+    return true;
+  });
+
+  return result.length > 0
+    ? result
+    : fallbackIds.length > 0
+      ? [...fallbackIds]
+      : CHORD_QUALITIES.map((quality) => quality.id);
+}
+
 export const SCALE_DEFINITIONS: ScaleDefinition[] = [
   { id: 'major', label: '大调音阶', intervals: [0, 2, 4, 5, 7, 9, 11], degrees: ['R', '2', '3', '4', '5', '6', '7'] },
   { id: 'natural-minor', label: '自然小调音阶', intervals: [0, 2, 3, 5, 7, 8, 10], degrees: ['R', '2', 'b3', '4', '5', 'b6', 'b7'] },

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_EAR_TRAINING_RANGE } from '../music/midi';
+import { DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS } from '../music/theory';
 import { defaultProgress, normalizeProgress } from './localStorageAdapter';
 
 describe('local storage progress import', () => {
@@ -36,13 +37,18 @@ describe('local storage progress import', () => {
   it('normalizes fretboard random mode settings', () => {
     const progress = defaultProgress();
     progress.settings.enabledFretboardRootIds = ['C', 'Gb'];
+    progress.settings.enabledArpeggioChordIds = ['7', 'maj7', 'not-a-chord', '7'];
     progress.settings.arpeggioQuestionMode = 'random';
     progress.settings.scaleQuestionMode = 'random';
 
     expect(normalizeProgress(progress).settings.enabledFretboardRootIds).toEqual(['C', 'Gb']);
+    expect(normalizeProgress(progress).settings.enabledArpeggioChordIds).toEqual(['7', 'maj7']);
     expect(normalizeProgress(progress).settings.arpeggioQuestionMode).toBe('random');
     expect(normalizeProgress(progress).settings.scaleQuestionMode).toBe('random');
     expect(normalizeProgress({ version: 1, settings: { enabledFretboardRootIds: [] }, stats: {} }).settings.enabledFretboardRootIds.length).toBeGreaterThan(12);
+    expect(normalizeProgress({ version: 1, settings: { enabledArpeggioChordIds: [] }, stats: {} }).settings.enabledArpeggioChordIds).toEqual(
+      [...DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS],
+    );
   });
 
   it('normalizes missing or invalid ear-training ranges', () => {

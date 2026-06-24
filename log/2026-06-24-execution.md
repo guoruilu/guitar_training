@@ -78,3 +78,35 @@ Attempted to run `npm run desktop:package:win:local-signed`, but the environment
 blocked it because it would persistently modify the current Windows user's
 certificate trust stores. The workflow is implemented, but it still needs an
 explicit user approval before executing on this machine.
+
+## Arpeggio Random Chord Pool And 3D Direction Marker
+
+Scope:
+
+- Added a configurable random chord pool for arpeggio fretboard practice.
+- Kept the default random arpeggio pool to dominant seventh, major seventh,
+  minor seventh, half-diminished seventh, and diminished seventh chords:
+  `7`, `maj7`, `min7`, `m7b5`, `dim7`.
+- Added first-person 3D fretboard orientation cues: a headstock shape, nut,
+  tuning pegs, and `琴头` / `琴身` labels.
+
+Implementation notes:
+
+- Added `enabledArpeggioChordIds` to persisted user settings.
+- Normalization removes invalid/duplicate chord ids and falls back to the
+  default five-chord pool when imported or legacy data has no valid chord ids.
+- Random arpeggio questions now draw chord definitions from the enabled chord
+  pool instead of the full chord library.
+- Manual arpeggio selection still exposes the full chord definition list.
+
+Verification:
+
+- `npm run test`: passed, 6 files and 29 tests.
+- `npm run build`: passed.
+- `npm run desktop:package:win`: passed and refreshed
+  `desktop/release/Guitar-Training-0.1.0-windows-portable.exe`.
+- Refreshed portable exe:
+  - Size: 81M.
+  - SHA256: `376f7172c56923056d066383868ea898492e44e9d3a7683bf2a371078b55105d`.
+  - `Get-AuthenticodeSignature`: `NotSigned`, because this run intentionally
+    used the normal package flow rather than the local signing fallback.

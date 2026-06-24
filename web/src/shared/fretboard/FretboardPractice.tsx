@@ -10,7 +10,7 @@ import {
   positionKey,
 } from '../music/fretboard';
 import { createFretboardChallenge, fretRangeLabel, modeLabel, randomFretRange } from '../music/fretboardTrainer';
-import { noteName, pitchClassesFromIntervals, randomItem } from '../music/theory';
+import { DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS, noteName, pitchClassesFromIntervals, randomItem } from '../music/theory';
 import { DEFAULT_FRETBOARD_ROOT_IDS, getRootOption, ROOT_OPTIONS, spellFormula, type RootOption } from '../music/spelling';
 import type { FretboardChallenge, FretboardExerciseMode, FretPosition, PitchClass } from '../music/types';
 import type { FretboardQuestionMode, TrainingArea, TrainingStats, UserSettings } from '../storage/types';
@@ -122,6 +122,10 @@ function questionModeKey(area: TrainingArea): 'arpeggioQuestionMode' | 'scaleQue
   return area === 'scale' ? 'scaleQuestionMode' : 'arpeggioQuestionMode';
 }
 
+function definitionShortLabel(definition: FretboardDefinition): string {
+  return definition.symbol || definition.id;
+}
+
 export function FretboardPractice({
   area,
   title,
@@ -131,10 +135,35 @@ export function FretboardPractice({
   onUpdateSettings,
   onRecordAttempt,
 }: FretboardPracticeProps) {
+  const isArpeggio = area === 'arpeggio';
   const enabledRootIds = useMemo(
     () => (settings.enabledFretboardRootIds.length > 0 ? settings.enabledFretboardRootIds : DEFAULT_FRETBOARD_ROOT_IDS),
     [settings.enabledFretboardRootIds],
   );
+  const enabledArpeggioChordIds = useMemo(() => {
+    if (!isArpeggio) {
+      return definitions.map((item) => item.id);
+    }
+
+    const validIds = new Set(definitions.map((item) => item.id));
+    const configuredIds = settings.enabledArpeggioChordIds.filter((id) => validIds.has(id));
+    const fallbackIds = DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS.filter((id) => validIds.has(id));
+
+    if (configuredIds.length > 0) {
+      return configuredIds;
+    }
+
+    return fallbackIds.length > 0 ? fallbackIds : definitions.map((item) => item.id);
+  }, [definitions, isArpeggio, settings.enabledArpeggioChordIds]);
+  const randomDefinitionPool = useMemo(() => {
+    if (!isArpeggio) {
+      return definitions;
+    }
+
+    const enabledIds = new Set(enabledArpeggioChordIds);
+    const pool = definitions.filter((item) => enabledIds.has(item.id));
+    return pool.length > 0 ? pool : definitions;
+  }, [definitions, enabledArpeggioChordIds, isArpeggio]);
   const modeSettingKey = questionModeKey(area);
   const questionMode = settings[modeSettingKey] as FretboardQuestionMode;
   const [rootId, setRootId] = useState(() => randomItem(enabledRootIds));
@@ -162,6 +191,12 @@ export function FretboardPractice({
   }, [enabledRootIds, questionMode, rootId]);
 
   useEffect(() => {
+    if (questionMode === 'random' && isArpeggio && !enabledArpeggioChordIds.includes(definitionId)) {
+      setDefinitionId(enabledArpeggioChordIds[0] ?? definitions[0].id);
+    }
+  }, [definitionId, definitions, enabledArpeggioChordIds, isArpeggio, questionMode]);
+
+  useEffect(() => {
     if (questionMode === 'manual') {
       setChallenge(buildChallenge(rootOption, definition, mode, settings.fretCount));
       setSelectedKeys([]);
@@ -173,11 +208,11 @@ export function FretboardPractice({
     if (questionMode === 'random') {
       resetChallenge();
     }
-  }, [questionMode, mode, settings.fretCount, enabledRootIds]);
+  }, [questionMode, mode, settings.fretCount, enabledRootIds, randomDefinitionPool]);
 
   function resetChallenge() {
     const nextRootId = questionMode === 'random' ? randomItem(enabledRootIds) : rootId;
-    const nextDefinition = questionMode === 'random' ? randomItem(definitions) : definition;
+    const nextDefinition = questionMode === 'random' ? randomItem(randomDefinitionPool) : definition;
     const nextRootOption = getRootOption(nextRootId);
 
     setRootId(nextRootId);
@@ -199,6 +234,24 @@ export function FretboardPractice({
 
     const nextRootIds = hasRoot ? enabledRootIds.filter((id) => id !== root.id) : [...enabledRootIds, root.id];
     onUpdateSettings({ enabledFretboardRootIds: nextRootIds });
+  }
+
+  function toggleArpeggioChordInPool(item: FretboardDefinition) {
+    const hasDefinition = enabledArpeggioChordIds.includes(item.id);
+    if (hasDefinition && enabledArpeggioChordIds.length === 1) {
+      return;
+    }
+
+    const nextDefinitionIds = hasDefinition
+      ? enabledArpeggioChordIds.filter((id) => id !== item.id)
+      : [...enabledArpeggioChordIds, item.id];
+    onUpdateSettings({ enabledArpeggioChordIds: nextDefinitionIds });
+  }
+
+  function useDefaultArpeggioChordPool() {
+    const validIds = new Set(definitions.map((item) => item.id));
+    const defaultIds = DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS.filter((id) => validIds.has(id));
+    onUpdateSettings({ enabledArpeggioChordIds: defaultIds.length > 0 ? defaultIds : definitions.map((item) => item.id) });
   }
 
   function togglePosition(position: FretPosition) {
@@ -390,6 +443,42 @@ export function FretboardPractice({
             ))}
           </select>
         </label>
+
+        {isArpeggio && (
+          <div>
+            <div className="inline-heading">
+              <span className="field-label">随机和弦池</span>
+              <div className="inline-actions">
+                <button type="button" className="ghost-button compact-button" onClick={useDefaultArpeggioChordPool}>
+                  默认
+                </button>
+                <button
+                  type="button"
+                  className="ghost-button compact-button"
+                  onClick={() => onUpdateSettings({ enabledArpeggioChordIds: definitions.map((item) => item.id) })}
+                >
+                  全选
+                </button>
+              </div>
+            </div>
+            <div className="chord-toggle-grid">
+              {definitions.map((item) => {
+                const checked = enabledArpeggioChordIds.includes(item.id);
+                return (
+                  <label className="chord-toggle" key={item.id} title={item.label}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      disabled={checked && enabledArpeggioChordIds.length === 1}
+                      onChange={() => toggleArpeggioChordInPool(item)}
+                    />
+                    <span>{definitionShortLabel(item)}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div>
           <span className="field-label">模式</span>

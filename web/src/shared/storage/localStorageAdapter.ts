@@ -1,5 +1,5 @@
 import type { StorageAdapter, TrainingArea, TrainingStats, UserProgress, UserSettings } from './types';
-import { INTERVALS } from '../music/theory';
+import { DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS, INTERVALS, normalizeChordQualityIds } from '../music/theory';
 import { DEFAULT_EAR_TRAINING_RANGE, normalizeEarTrainingRange } from '../music/midi';
 import { DEFAULT_FRETBOARD_ROOT_IDS, normalizeRootIds } from '../music/spelling';
 
@@ -26,6 +26,7 @@ export const DEFAULT_SETTINGS: UserSettings = {
   earTrainingMinMidi: DEFAULT_EAR_TRAINING_RANGE.minMidi,
   earTrainingMaxMidi: DEFAULT_EAR_TRAINING_RANGE.maxMidi,
   enabledFretboardRootIds: [...DEFAULT_FRETBOARD_ROOT_IDS],
+  enabledArpeggioChordIds: [...DEFAULT_RANDOM_ARPEGGIO_CHORD_IDS],
   arpeggioQuestionMode: 'manual',
   scaleQuestionMode: 'manual',
 };
@@ -96,6 +97,7 @@ export function normalizeProgress(value: unknown): UserProgress {
     ? 'first-string-bottom'
     : DEFAULT_SETTINGS.fretboardStringOrder;
   const enabledFretboardRootIds = normalizeRootIds(settings.enabledFretboardRootIds);
+  const enabledArpeggioChordIds = normalizeChordQualityIds(settings.enabledArpeggioChordIds);
   const arpeggioQuestionMode = settings.arpeggioQuestionMode === 'random' ? 'random' : DEFAULT_SETTINGS.arpeggioQuestionMode;
   const scaleQuestionMode = settings.scaleQuestionMode === 'random' ? 'random' : DEFAULT_SETTINGS.scaleQuestionMode;
   const earTrainingRange = normalizeEarTrainingRange({
@@ -120,6 +122,7 @@ export function normalizeProgress(value: unknown): UserProgress {
       earTrainingMinMidi: earTrainingRange.minMidi,
       earTrainingMaxMidi: earTrainingRange.maxMidi,
       enabledFretboardRootIds,
+      enabledArpeggioChordIds,
       arpeggioQuestionMode,
       scaleQuestionMode,
     },
