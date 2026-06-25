@@ -2,6 +2,9 @@
 
 Electron desktop shell for the guitar training web app in `../web`.
 
+Current release: 第一版 / v1.0. The Windows portable artifact is
+`desktop/release/Guitar-Training-v1.0-windows-portable.exe`.
+
 ## Development
 
 Install dependencies once:

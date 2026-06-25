@@ -1,6 +1,6 @@
 {
   "name": "guitar-training-desktop",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Desktop shell for Guitar Learning Assistant.",
   "main": "src/main.cjs",
@@ -38,7 +38,7 @@
       ]
     },
     "portable": {
-      "artifactName": "Guitar-Training-${version}-windows-portable.exe"
+      "artifactName": "Guitar-Training-v1.0-windows-portable.exe"
     }
   }
 }

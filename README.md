@@ -1,6 +1,6 @@
 # Guitar Learning Assistant
 
-吉他学习辅助工具。首版包括听力训练、指板琶音训练和指板音阶训练。
+吉他学习辅助工具。当前版本命名为第一版（v1.0），包括听力训练、指板琶音训练和指板音阶训练。
 
 ## Project Origin
 
@@ -13,9 +13,13 @@
 - `docs/`：项目文档。
 - `log/`：执行和排错记录。
 
+第一版（v1.0）的详细需求、架构、功能、构建发布和代码/函数参考见
+[`docs/v1.0/README.md`](./docs/v1.0/README.md)。
+
 ## Run
 
-普通 Windows 用户优先使用 GitHub Actions 生成的桌面产物 `guitar-training-desktop-windows`，双击其中的 portable exe 即可运行，不需要 WSL、Node.js 或 npm。
+普通 Windows 用户优先使用 GitHub Actions 生成的桌面产物 `guitar-training-desktop-windows`，双击其中的
+`Guitar-Training-v1.0-windows-portable.exe` 即可运行，不需要 WSL、Node.js 或 npm。
 
 源码开发可在根目录运行：
 
@@ -52,6 +56,9 @@ Windows 桌面打包：
 npm --prefix desktop install
 npm run desktop:package:win
 ```
+
+第一版（v1.0）的 Windows portable 产物名为
+`desktop/release/Guitar-Training-v1.0-windows-portable.exe`。
 
 上面的普通打包命令不会附带公开可信的代码签名证书。Windows 11
 “智能应用控制”可能会拦截这种未签名的 portable exe。
