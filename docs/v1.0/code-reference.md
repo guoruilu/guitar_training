@@ -534,6 +534,5 @@ Windows 桌面启动 helper。
 新增或修改函数后，同步更新本文对应文件段落。新增功能需求后，同步更新：
 
 - `docs/requirements/YYYY-MM-DD.md`
-- `docs/v1.0/requirements.md` 或后续版本需求文档
-- `docs/v1.0/features.md` 或后续版本功能文档
+- `docs/v1.0/features-and-requirements.md` 或后续版本功能需求总览
 - `log/YYYY-MM-DD-execution.md`

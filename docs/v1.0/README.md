@@ -6,9 +6,8 @@
 
 ## 文档目录
 
-- [需求覆盖](./requirements.md)：整理原始需求、当前实现状态和边界。
+- [功能与需求总览](./features-and-requirements.md)：记录 v1.0 所有功能、满足的需求、实现位置和边界。
 - [系统架构](./architecture.md)：说明 Web、Electron、数据、音频、指板和打包签名的模块关系。
-- [功能说明](./features.md)：按用户功能描述第一版已经实现的训练能力。
 - [构建与发布](./build-and-release.md)：说明开发、测试、普通打包、本机签名备用方案和 v1.0 exe 产物。
 - [代码与函数参考](./code-reference.md)：逐文件说明主要代码职责，并逐项说明函数、组件、类和脚本入口。
 
